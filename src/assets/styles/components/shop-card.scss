@@ -1,0 +1,52 @@
+// 商家卡片样式
+.shop-card {
+  @extend .mobile-card;
+  
+  .shop-image {
+    width: 100%;
+    height: 120px;
+    border-radius: 6px;
+    object-fit: cover;
+    margin-bottom: 12px;
+  }
+  
+  .shop-info {
+    .shop-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 4px;
+      
+      @include text-ellipsis;
+    }
+    
+    .shop-desc {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 8px;
+      
+      @include text-ellipsis-2;
+    }
+    
+    .shop-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      
+      .rating {
+        color: #ff6b35;
+      }
+      
+      .distance {
+        color: #999;
+      }
+    }
+  }
+  
+  // 触摸反馈
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+}

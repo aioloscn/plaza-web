@@ -1,0 +1,115 @@
+// 常用混合器
+
+// 清除浮动
+@mixin clearfix {
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
+
+// 文本省略号
+@mixin ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// 居中对齐
+@mixin center($type: 'both') {
+  position: absolute;
+  @if $type == 'both' {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  } @else if $type == 'horizontal' {
+    left: 50%;
+    transform: translateX(-50%);
+  } @else if $type == 'vertical' {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+// Flex 布局
+@mixin flex($direction: row, $justify: center, $align: center) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+}
+
+// 响应式断点
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'mobile' {
+    @media (max-width: 767px) {
+      @content;
+    }
+  } @else if $breakpoint == 'tablet' {
+    @media (min-width: 768px) and (max-width: 1023px) {
+      @content;
+    }
+  } @else if $breakpoint == 'desktop' {
+    @media (min-width: 1024px) {
+      @content;
+    }
+  }
+}
+
+// 按钮样式
+@mixin button($bg-color: $primary-color, $text-color: #fff, $radius: 4px) {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: $bg-color;
+  color: $text-color;
+  border: none;
+  border-radius: $radius;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  text-align: center;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// 卡片样式
+@mixin card($padding: 16px, $radius: 8px, $shadow: true) {
+  background: #fff;
+  border-radius: $radius;
+  padding: $padding;
+  
+  @if $shadow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// 文本省略号 - 单行
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// 文本省略号 - 两行
+@mixin text-ellipsis-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

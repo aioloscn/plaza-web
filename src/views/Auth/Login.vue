@@ -1,0 +1,122 @@
+<template>
+  <div class="login-page">
+    <!-- 头部导航 -->
+    <van-nav-bar
+      title="登录"
+      left-arrow
+      @click-left="$router.go(-1)"
+      :style="{ backgroundColor: '#FF8400', color: '#fff' }"
+    />
+
+    <!-- 登录表单 -->
+    <div class="login-form">
+      <van-form @submit="handleLogin">
+        <van-cell-group inset>
+          <van-field
+            v-model="loginForm.telphone"
+            name="telphone"
+            label="手机号"
+            placeholder="请输入手机号"
+            :rules="[{ required: true, message: '请输入手机号' }]"
+            type="tel"
+            maxlength="11"
+          />
+          <van-field
+            v-model="loginForm.password"
+            type="password"
+            name="password"
+            label="密码"
+            placeholder="请输入密码"
+            :rules="[{ required: true, message: '请输入密码' }]"
+          />
+        </van-cell-group>
+
+        <div class="login-actions">
+          <van-button
+            round
+            block
+            type="warning"
+            native-type="submit"
+            :loading="loading"
+            class="login-btn"
+          >
+            登录
+          </van-button>
+
+          <van-button
+            round
+            block
+            plain
+            type="warning"
+            class="register-btn"
+            @click="$router.push('/register')"
+          >
+            注册
+          </van-button>
+        </div>
+      </van-form>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { showToast } from 'vant'
+import { useUserStore } from '@/store/modules/user'
+
+const router = useRouter()
+const userStore = useUserStore()
+const loading = ref(false)
+
+// 登录表单数据
+const loginForm = reactive({
+  telphone: '',
+  password: ''
+})
+
+// 处理登录
+const handleLogin = async () => {
+  if (!loginForm.telphone || !loginForm.password) {
+    showToast('请填写完整信息')
+    return
+  }
+
+  loading.value = true
+  try {
+    await userStore.loginAction(loginForm)
+    showToast('登录成功')
+    router.push('/')
+  } catch (error) {
+    showToast(error.message || '登录失败')
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.login-page {
+  min-height: 100vh;
+  background-color: $background-color;
+}
+
+.login-form {
+  padding: 40px 20px;
+}
+
+.login-actions {
+  margin-top: 30px;
+  
+  .login-btn {
+    margin-bottom: 15px;
+    background-color: $primary-color;
+    border-color: $primary-color;
+  }
+  
+  .register-btn {
+    color: $primary-color;
+    border-color: $primary-color;
+  }
+}
+</style>

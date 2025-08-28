@@ -1,0 +1,15 @@
+// 基础样式
+@import './base/variables.scss';
+@import './base/mixins.scss';    // 修正：先导入 mixins
+@import './base/reset.scss';
+@import './base/responsive.scss';
+@import './base/mobile.scss';
+
+// 通用样式
+@import './base/common.scss';    // 修正：后导入 common
+
+// 组件样式
+@import './components/index.scss';
+
+// 页面样式
+@import './pages/index.scss';

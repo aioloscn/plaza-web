@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="120" fill="#f5f5f5"/>
+  <rect x="20" y="30" width="80" height="60" rx="8" fill="#e0e0e0"/>
+  <circle cx="40" cy="50" r="8" fill="#bdbdbd"/>
+  <path d="M30 75 L40 65 L50 70 L70 55 L90 70 L90 85 L30 85 Z" fill="#bdbdbd"/>
+  <text x="60" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#999">店铺图片</text>
+</svg>

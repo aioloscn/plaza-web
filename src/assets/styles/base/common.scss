@@ -1,0 +1,188 @@
+// 通用样式
+
+// 通用类
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+// 显示/隐藏
+.show {
+  display: block !important;
+}
+
+.hide {
+  display: none !important;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+// 浮动
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
+}
+
+.clearfix {
+  // 替换 @include clearfix; 为现代CSS
+  display: flow-root; // 或者使用 flexbox/grid
+}
+
+// 间距类
+@for $i from 0 through 5 {
+  .m-#{$i} {
+    margin: #{$i * 8}px !important;
+  }
+  
+  .mt-#{$i} {
+    margin-top: #{$i * 8}px !important;
+  }
+  
+  .mb-#{$i} {
+    margin-bottom: #{$i * 8}px !important;
+  }
+  
+  .ml-#{$i} {
+    margin-left: #{$i * 8}px !important;
+  }
+  
+  .mr-#{$i} {
+    margin-right: #{$i * 8}px !important;
+  }
+  
+  .p-#{$i} {
+    padding: #{$i * 8}px !important;
+  }
+  
+  .pt-#{$i} {
+    padding-top: #{$i * 8}px !important;
+  }
+  
+  .pb-#{$i} {
+    padding-bottom: #{$i * 8}px !important;
+  }
+  
+  .pl-#{$i} {
+    padding-left: #{$i * 8}px !important;
+  }
+  
+  .pr-#{$i} {
+    padding-right: #{$i * 8}px !important;
+  }
+}
+
+// Flex 布局类
+.d-flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-around {
+  justify-content: space-around;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-start {
+  align-items: flex-start;
+}
+
+.align-end {
+  align-items: flex-end;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+// 文本省略
+.ellipsis {
+  @include ellipsis(1);
+}
+
+.ellipsis-2 {
+  @include ellipsis(2);
+}
+
+.ellipsis-3 {
+  @include ellipsis(3);
+}
+
+// 按钮样式
+.btn {
+  @include button;
+}
+
+.btn-primary {
+  @include button($primary-color, #fff);
+}
+
+.btn-secondary {
+  @include button($secondary-color, #fff);
+}
+
+.btn-outline {
+  @include button(transparent, $primary-color);
+  border: 1px solid $primary-color;
+}
+
+// 卡片样式
+.card {
+  @include card;
+}
+
+.card-shadow {
+  @include card($shadow: true);
+}
+
+// 移动端适配
+@include respond-to('mobile') {
+  .container {
+    padding: 0 $spacing-sm;
+  }
+  
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@include respond-to('desktop') {
+  .hide-desktop {
+    display: none !important;
+  }
+}
