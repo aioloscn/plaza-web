@@ -700,7 +700,8 @@ onUnmounted(() => {
     background: transparent;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
+-    gap: 16px;
++    gap: 12px;
   }
 
   /* 跨列的区块：列表标题、加载与结束提示 */
@@ -730,13 +731,39 @@ onUnmounted(() => {
   }
 
   .shop-item .shop-name { font-size: 15px; }
-+  /* 列表：5 列卡片流，上图下文 */
+-+  /* 列表：5 列卡片流，上图下文 */
+-+  .shop-list {
+-+    padding: 0;
+-+    background: transparent;
+-+    display: grid;
+-+    grid-template-columns: repeat(5, 1fr);
+-+    gap: 16px;
+-+  }
+-+
+-+  .shop-item {
+-+    display: block;
+-+    background: #fff;
+-+    border: 1px solid #eee;
+-+    border-radius: 12px;
+-+    padding: 12px;
+-+    transition: box-shadow .2s ease, transform .2s ease;
+-+  }
+-+  .shop-item:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+-+
+-+  .shop-item .shop-image {
+-+    width: 100%;
+-+    height: 200px;
+-+    margin: 0 0 10px 0;
+-+  }
+-+
+-+  .shop-item .shop-name { font-size: 15px; }
++  /* 列表：5 列卡片流，上图下文（修正重复块，参数统一） */
 +  .shop-list {
 +    padding: 0;
 +    background: transparent;
 +    display: grid;
 +    grid-template-columns: repeat(5, 1fr);
-+    gap: 16px;
++    gap: 12px;
 +  }
 +
 +  .shop-item {
@@ -751,7 +778,7 @@ onUnmounted(() => {
 +
 +  .shop-item .shop-image {
 +    width: 100%;
-+    height: 200px;
++    height: 220px;
 +    margin: 0 0 10px 0;
 +  }
 +
