@@ -228,10 +228,9 @@ onMounted(() => {
 /* 桌面端样式（通过 .ignore 禁用 px-to-viewport 转换） */
 .ignore {
   .profile-page {
--    max-width: 1200px;
-+    width: 33.333vw;
-     margin: 0 auto;
-     padding-bottom: 24px; /* 桌面端隐藏 Tabbar，因此减少底部留白 */
+    width: 33.333vw;
+    margin: 0 auto;
+    padding-bottom: 24px; /* 桌面端隐藏 Tabbar，因此减少底部留白 */
   }
 
   .van-nav-bar {
@@ -239,52 +238,49 @@ onMounted(() => {
   }
 
   .user-info {
--    max-width: 1200px;
-+    width: 33.333vw;
-     margin: 24px auto;
-     padding: 24px;
-     border: 1px solid #eee;
-     border-radius: 12px;
-     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    width: 33.333vw;
+    margin: 24px auto;
+    padding: 24px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 
-     .user-avatar {
-       margin-right: 20px;
+    .user-avatar {
+      margin-right: 20px;
 
-       /* 放大头像尺寸 */
-       .van-image {
-         width: 96px !important;
-         height: 96px !important;
-       }
-     }
+      /* 放大头像尺寸 */
+      .van-image {
+        width: 96px !important;
+        height: 96px !important;
+      }
+    }
 
-     .user-details {
-       .username {
-         font-size: 20px;
-       }
+    .user-details {
+      .username {
+        font-size: 20px;
+      }
 
-       .user-phone {
-         font-size: 14px;
-       }
-     }
+      .user-phone {
+        font-size: 14px;
+      }
+    }
   }
 
   .menu-section {
--    max-width: 1200px;
-+    width: 33.333vw;
-     margin: 16px auto;
-     padding: 0 16px;
+    width: 33.333vw;
+    margin: 16px auto;
+    padding: 0 16px;
 
-     /* 增强桌面端单元样式的触达面积与对比度 */
-     :deep(.van-cell) {
-       font-size: 16px;
-       padding: 16px 12px;
-     }
+    /* 增强桌面端单元样式的触达面积与对比度 */
+    :deep(.van-cell) {
+      font-size: 16px;
+      padding: 16px 12px;
+    }
   }
 
   .logout-section {
--    max-width: 600px;
-+    width: 33.333vw;
-     margin: 24px auto 48px;
+    width: 33.333vw;
+    margin: 24px auto 48px;
   }
 
   /* 双保险：即使忘记 v-if 也不显示 Tabbar */

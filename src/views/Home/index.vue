@@ -646,6 +646,12 @@ onUnmounted(() => {
 
 /* 桌面端样式（忽略 px-to-viewport 转换） */
 .ignore {
+  /* 根容器自身收窄为 1/3 并居中 */
+  &.home-page {
+    width: 33.333vw;
+    margin: 0 auto;
+  }
+
   /* 居中容器和更舒适的留白 */
   .home-header {
     padding: 12px 24px;
@@ -664,9 +670,8 @@ onUnmounted(() => {
   .home-grid {
     margin: 20px auto;
     padding: 16px 0;
--    max-width: 1200px;
-+    width: 33.333vw;
-  
+    width: 33.333vw;
+    
     :deep(.van-grid-item__content) {
       padding: 16px 8px;
     }
@@ -676,8 +681,7 @@ onUnmounted(() => {
     padding: 16px 24px;
     background-color: #f6f7f9;
     display: grid;
--    grid-template-columns: repeat(3, 1fr);
-+    grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
     gap: 16px;
     align-content: start;
 
@@ -693,52 +697,6 @@ onUnmounted(() => {
     .finished-text {
       grid-column: 1 / -1;
       background: transparent;
-    }
-  }
-
-  .shop-item {
-    display: block;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 12px;
-    background: #fff;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-    cursor: pointer;
-
-    &:hover {
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-      transform: translateY(-2px);
-    }
-
-    .shop-image {
-      width: 100%;
-      height: 160px;
-      margin-right: 0;
-      margin-bottom: 10px;
-
-      img {
-        border-radius: 6px;
-      }
-    }
-
-    .shop-info {
-      .shop-name {
-        font-size: 16px;
-        margin-bottom: 6px;
-      }
-
-      .shop-rating {
-        margin-bottom: 6px;
-      }
-
-      .shop-tags {
-        margin-bottom: 10px;
-      }
-
-      .shop-price {
-        .price-text { font-size: 14px; }
-        .distance { font-size: 12px; }
-      }
     }
   }
 }

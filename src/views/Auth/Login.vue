@@ -148,8 +148,8 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-+    width: 33.333vw;
-+    margin: 0 auto;
+    width: 33.333vw;
+    margin: 0 auto;
   }
 
   .van-nav-bar {
@@ -157,34 +157,19 @@ onUnmounted(() => {
   }
 
   .login-form {
-    flex: 1;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 48px 16px;
+    align-items: center;
+    padding: 24px;
   }
 
-  /* 居中的卡片容器 */
   :deep(.van-form) {
     width: 420px;
-    padding: 24px 20px;
+    padding: 24px;
     background: #fff;
     border: 1px solid #eee;
     border-radius: 12px;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
-  }
-
-  :deep(.van-cell-group--inset) {
-    margin: 12px 0 0 0;
-  }
-
-  :deep(.van-field) {
-    padding: 12px 8px;
-    font-size: 16px;
-  }
-
-  .login-actions {
-    margin-top: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   }
 }
 </style>
