@@ -114,7 +114,7 @@ const currentPage = ref(1); // 当前页码
 const currentCity = ref('上海'); // 当前城市
 
 // 桌面端网格列数
-const gridColumnNum = computed(() => (isDesktop.value ? 8 : 4));
+const gridColumnNum = computed(() => (isDesktop.value ? 6 : 4));
 
 // 轮播图数据
 const banners = ref([
@@ -674,9 +674,31 @@ onUnmounted(() => {
     
     :deep(.van-grid-item__content) {
       padding: 16px 8px;
-    }
-  }
-
+-+      gap: 6px;
++      gap: 6px;
+     }
+-
+-+    /* PC 下功能宫格的图标与文字更清晰，避免换行挤压 */
+-+    .grid-icon {
+-+      width: 40px;
+-+      height: 40px;
+-+    }
+-
+-+    :deep(.van-grid-item__text) {
+-+      font-size: 14px;
+-+      white-space: nowrap;
+-+    }
++    /* PC 下功能宫格的图标与文字更清晰，避免换行挤压 */
++    .grid-icon {
++      width: 40px;
++      height: 40px;
++    }
++
++    :deep(.van-grid-item__text) {
++      font-size: 14px;
++      white-space: nowrap;
++    }
+   }
   .shop-list {
     padding: 16px 24px;
     background-color: #f6f7f9;
