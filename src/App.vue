@@ -22,5 +22,9 @@
     min-height: 100vh;
     overflow: visible;
   }
+  html, body {
+    /* 避免任何子元素微小溢出引起横向滚动条 */
+    overflow-x: hidden;
+  }
 }
 </style>
