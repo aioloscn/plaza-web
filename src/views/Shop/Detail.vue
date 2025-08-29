@@ -322,7 +322,6 @@ onUnmounted(() => {
       grid-template-columns: 1fr;
       gap: 16px;
     }
-  }
 
   .product-item {
     display: block;
@@ -351,5 +350,4 @@ onUnmounted(() => {
       text-align: right;
     }
   }
-}
 </style>

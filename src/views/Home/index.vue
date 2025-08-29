@@ -650,44 +650,13 @@ onUnmounted(() => {
   &.home-page {
     width: 50vw;
     margin: 0 auto;
+    /* 允许页面使用浏览器原生滚动，不在容器内滚动 */
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
-  /* 居中容器和更舒适的留白 */
-  .home-header {
-    padding: 12px 24px;
-    
-    :deep(.van-search) {
-      .van-search__content {
-        border-radius: 22px;
-      }
-    }
-  }
-
-  .home-swipe {
-    height: 320px;
-  }
-
-  .home-grid {
-    margin: 20px auto;
-    padding: 16px 0;
-    width: 100%;
-    
-    :deep(.van-grid-item__content) {
-      padding: 16px 8px;
-      gap: 6px;
-    }
-
-    /* PC 下功能宫格的图标与文字更清晰，避免换行挤压 */
-    .grid-icon {
-      width: 40px;
-      height: 40px;
-    }
-
-    :deep(.van-grid-item__text) {
-      font-size: 14px;
-      white-space: nowrap;
-    }
-  }
+  /* PC 下主页主体用文档流滚动，避免内部滚动条 */
   .shop-list {
     padding: 16px 24px;
     background-color: #f6f7f9;
@@ -695,20 +664,9 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
     gap: 16px;
     align-content: start;
-
-    .list-title {
-      grid-column: 1 / -1;
-      padding: 16px 8px;
-      font-size: 18px;
-      border: none;
-      background: transparent;
-    }
-
-    .loading-text,
-    .finished-text {
-      grid-column: 1 / -1;
-      background: transparent;
-    }
+    /* 释放内部滚动，由页面滚动 */
+    height: auto;
+    overflow: visible;
   }
 }
 </style>

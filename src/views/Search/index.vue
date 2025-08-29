@@ -498,9 +498,7 @@ const clearHistory = () => {
 <style lang="scss" scoped>
 .search-page {
   height: 100vh;
-  background-color: $background-color;
   display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
@@ -704,12 +702,18 @@ const clearHistory = () => {
 .ignore.search-page {
   width: 50vw;
   margin: 0 auto;
+  /* 允许页面使用浏览器原生滚动 */
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
 }
 
-.ignore .search-header { padding: 16px 20px; }
-.ignore .category-section { padding: 20px; }
-.ignore .sort-section { padding: 12px 20px; }
-.ignore .search-results { padding: 16px 20px 24px; }
+/* PC 下结果区不再产生内部滚动条 */
+.ignore .search-results {
+  padding: 16px 20px 24px;
+  height: auto;
+  overflow: visible;
+}
 
 .ignore .search-results :deep(.van-list) {
   display: grid;
