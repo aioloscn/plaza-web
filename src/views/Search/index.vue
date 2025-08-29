@@ -702,7 +702,7 @@ const clearHistory = () => {
 
 /* Desktop（PC）样式：当根元素带有 ignore 类时生效，且被 px-to-viewport 排除，不会转 vw */
 .ignore.search-page {
-  max-width: 1200px;
+  width: 33.333vw;
   margin: 0 auto;
 }
 
@@ -724,7 +724,7 @@ const clearHistory = () => {
 
 .ignore .search-results :deep(.van-list) {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 

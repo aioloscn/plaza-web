@@ -1,5 +1,6 @@
 <template>
-  <div class="login-page">
+  <!-- 桌面端通过 ignore 禁用 px-to-viewport -->
+  <div class="login-page" :class="{ ignore: isDesktop }">
     <!-- 头部导航 -->
     <van-nav-bar
       title="登录"
@@ -60,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/store/modules/user'
@@ -68,6 +69,14 @@ import { useUserStore } from '@/store/modules/user'
 const router = useRouter()
 const userStore = useUserStore()
 const loading = ref(false)
+
+// 桌面端检测（>=1200px）
+const isDesktop = ref(typeof window !== 'undefined' ? window.innerWidth >= 1200 : false)
+const updateIsDesktop = () => {
+  if (typeof window !== 'undefined') {
+    isDesktop.value = window.innerWidth >= 1200
+  }
+}
 
 // 登录表单数据
 const loginForm = reactive({
@@ -93,6 +102,19 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  updateIsDesktop()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', updateIsDesktop)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateIsDesktop)
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -117,6 +139,52 @@ const handleLogin = async () => {
   .register-btn {
     color: $primary-color;
     border-color: $primary-color;
+  }
+}
+
+/* 桌面端样式 */
+.ignore {
+  .login-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
++    width: 33.333vw;
++    margin: 0 auto;
+  }
+
+  .van-nav-bar {
+    padding: 0 16px;
+  }
+
+  .login-form {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+  }
+
+  /* 居中的卡片容器 */
+  :deep(.van-form) {
+    width: 420px;
+    padding: 24px 20px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  :deep(.van-cell-group--inset) {
+    margin: 12px 0 0 0;
+  }
+
+  :deep(.van-field) {
+    padding: 12px 8px;
+    font-size: 16px;
+  }
+
+  .login-actions {
+    margin-top: 20px;
   }
 }
 </style>

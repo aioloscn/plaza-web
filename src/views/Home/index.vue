@@ -664,23 +664,20 @@ onUnmounted(() => {
   .home-grid {
     margin: 20px auto;
     padding: 16px 0;
-    max-width: 1200px;
-    
+-    max-width: 1200px;
++    width: 33.333vw;
+  
     :deep(.van-grid-item__content) {
       padding: 16px 8px;
     }
-  }
-
-  .grid-icon {
-    width: 48px;
-    height: 48px;
   }
 
   .shop-list {
     padding: 16px 24px;
     background-color: #f6f7f9;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+-    grid-template-columns: repeat(3, 1fr);
++    grid-template-columns: 1fr;
     gap: 16px;
     align-content: start;
 
