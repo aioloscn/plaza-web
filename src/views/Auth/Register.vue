@@ -1,5 +1,5 @@
 <template>
-  <div class="register-page">
+  <div class="register-page" :class="{ ignore: isDesktop }">
     <!-- 头部导航 -->
     <van-nav-bar
       title="注册"
@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { register } from '@/api/modules/auth'
@@ -122,6 +122,27 @@ const handleRegister = async () => {
     loading.value = false
   }
 }
+
+// 桌面端检测（>=1200px），用于切换到 PC-only 样式命名空间（ignore）
+const isDesktop = ref(typeof window !== 'undefined' ? window.innerWidth >= 1200 : false)
+const updateIsDesktop = () => {
+  if (typeof window !== 'undefined') {
+    isDesktop.value = window.innerWidth >= 1200
+  }
+}
+
+onMounted(() => {
+  updateIsDesktop()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', updateIsDesktop)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateIsDesktop)
+  }
+})
 </script>
 
 <style lang="scss" scoped>
