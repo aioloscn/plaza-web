@@ -1,5 +1,5 @@
 <template>
-  <div class="shop-detail-page">
+  <div class="shop-detail-page" :class="{ ignore: isDesktop }">
     <!-- 头部导航 -->
     <van-nav-bar
       :title="shopInfo.name || '商家详情'"
@@ -73,12 +73,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { showToast } from 'vant'
 
 const route = useRoute()
 const shopId = route.params.id
+
+// Desktop 侦测（>=1200 视为 PC）
+const isDesktop = ref(false)
+const updateIsDesktop = () => {
+  isDesktop.value = typeof window !== 'undefined' && window.innerWidth >= 1200
+}
 
 const loading = ref(false)
 const finished = ref(false)
@@ -139,8 +145,18 @@ const handleProductImageError = (event) => {
 }
 
 onMounted(() => {
+  updateIsDesktop()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', updateIsDesktop)
+  }
   getShopInfo()
   onLoad()
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateIsDesktop)
+  }
 })
 </script>
 
@@ -283,6 +299,79 @@ onMounted(() => {
     .van-button {
       background-color: $primary-color;
       border-color: $primary-color;
+    }
+  }
+}
+
+/* 桌面端样式（忽略 px-to-viewport 转换） */
+.ignore {
+  .shop-info {
+    max-width: 1200px;
+    margin: 16px auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    
+    .shop-banner {
+      height: 320px;
+    }
+    
+    .shop-basic {
+      padding: 16px;
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      position: sticky;
+      top: 16px;
+      align-self: start;
+    }
+  }
+
+  .product-list {
+    max-width: 1200px;
+    margin: 16px auto 24px;
+    padding: 0 16px;
+    background: transparent;
+
+    .section-title {
+      background: transparent;
+      border: none;
+      padding: 8px 0 12px;
+      font-size: 18px;
+    }
+
+    :deep(.van-list) {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+  }
+
+  .product-item {
+    display: block;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 160px;
+      margin-right: 0;
+      margin-bottom: 10px;
+
+      img { border-radius: 6px; }
+    }
+
+    .product-action {
+      margin-top: 8px;
+      text-align: right;
     }
   }
 }
