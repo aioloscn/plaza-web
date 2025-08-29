@@ -698,29 +698,22 @@ const clearHistory = () => {
   padding: 60px 20px;
 }
 
-/* Desktop（PC）样式：当根元素带有 ignore 类时生效，且被 px-to-viewport 排除，不会转 vw */
+/* Desktop（PC）样式：更紧凑的尺寸 */
 .ignore.search-page {
   width: 50vw;
   margin: 0 auto;
-  /* 允许页面使用浏览器原生滚动 */
   height: auto;
   min-height: 100vh;
   overflow: visible;
 }
 
-/* PC 下结果区不再产生内部滚动条 */
-.ignore .search-results {
-  padding: 16px 20px 24px;
-  height: auto;
-  overflow: visible;
-}
-
-.ignore .search-results :deep(.van-list) {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
+.ignore .search-header { padding: 8px 16px; }
+.ignore .search-header :deep(.van-search__content) { height: 36px; border-radius: 18px; }
+.ignore .category-section { padding: 12px 16px; }
+.ignore .sort-section { padding: 8px 16px; }
+.ignore .search-results { padding: 12px 16px 20px; height: auto; overflow: visible; }
+.ignore .shop-item { padding: 10px; border-radius: 8px; }
+.ignore .shop-item .shop-image { height: 140px; }
 .ignore .shop-item {
   display: block;
   border: 1px solid #eee;

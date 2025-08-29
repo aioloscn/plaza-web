@@ -656,17 +656,49 @@ onUnmounted(() => {
     overflow: visible;
   }
 
-  /* PC 下主页主体用文档流滚动，避免内部滚动条 */
-  .shop-list {
-    padding: 16px 24px;
-    background-color: #f6f7f9;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    align-content: start;
-    /* 释放内部滚动，由页面滚动 */
-    height: auto;
-    overflow: visible;
+  /* 头部与搜索框更紧凑 */
+  .home-header {
+    padding: 8px 16px;
+
+    :deep(.van-search) {
+      .van-search__content {
+        height: 36px;
+        border-radius: 18px;
+      }
+    }
   }
+
+  /* Banner 降低高度，减少首屏占用 */
+  .home-swipe { height: 220px; }
+
+  /* 宫格：减小间距和图标尺寸 */
+  .home-grid {
+    margin: 12px auto;
+    padding: 12px 0;
+
+    :deep(.van-grid-item__content) {
+      padding: 12px 6px;
+      gap: 4px;
+    }
+
+    .grid-icon { width: 28px; height: 28px; }
+    :deep(.van-grid-item__text) { font-size: 13px; }
+  }
+
+  /* 列表：卡片留白略收紧 */
+  .shop-list { gap: 14px; }
+}
+
+/* PC 下主页主体用文档流滚动，避免内部滚动条 */
+.shop-list {
+  padding: 16px 24px;
+  background-color: #f6f7f9;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-content: start;
+  /* 释放内部滚动，由页面滚动 */
+  height: auto;
+  overflow: visible;
 }
 </style>
