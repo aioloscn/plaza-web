@@ -648,7 +648,7 @@ onUnmounted(() => {
 .ignore {
   /* 根容器自身收窄为 1/3 并居中 */
   &.home-page {
-    width: 33.333vw;
+    width: 50vw;
     margin: 0 auto;
   }
 
@@ -670,7 +670,7 @@ onUnmounted(() => {
   .home-grid {
     margin: 20px auto;
     padding: 16px 0;
-    width: 33.333vw;
+    width: 100%;
     
     :deep(.van-grid-item__content) {
       padding: 16px 8px;

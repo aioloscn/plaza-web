@@ -305,37 +305,10 @@ onUnmounted(() => {
 
 /* 桌面端样式（忽略 px-to-viewport 转换） */
 .ignore {
-  .shop-detail-page {
-    width: 33.333vw;
-    margin: 0 auto;
-  }
-
-  .shop-info {
-    width: 33.333vw;
-    margin: 16px auto;
-    display: block;
-    gap: 0;
-    
-    .shop-banner {
-      height: 320px;
-    }
-    
-    .shop-basic {
-      padding: 16px;
-      background: #fff;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      position: static;
-      top: auto;
-      margin-top: 12px;
-    }
-  }
-
-  .product-list {
-    width: 33.333vw;
-    margin: 16px auto 24px;
-    padding: 0 16px;
-    background: transparent;
+  .shop-detail-page { width: 50vw; margin: 0 auto; }
+  .shop-info { width: 50vw; margin: 16px auto; display: block; gap: 0; }
+  .product-list { width: 50vw; margin: 16px auto 24px; padding: 0 16px; background: transparent; }
+}
 
     .section-title {
       background: transparent;
