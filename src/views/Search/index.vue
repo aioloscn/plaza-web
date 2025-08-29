@@ -700,40 +700,20 @@ const clearHistory = () => {
 
 /* Desktop（PC）样式：更紧凑的尺寸 */
 .ignore.search-page {
-  width: 50vw;
+  width: min(1120px, 72vw);
   margin: 0 auto;
   height: auto;
   min-height: 100vh;
   overflow: visible;
 }
 
-.ignore .search-header { padding: 8px 16px; }
+.ignore .search-header { position: sticky; top: 0; z-index: 20; padding: 10px 16px; }
 .ignore .search-header :deep(.van-search__content) { height: 36px; border-radius: 18px; }
-.ignore .category-section { padding: 12px 16px; }
-.ignore .sort-section { padding: 8px 16px; }
-.ignore .search-results { padding: 12px 16px 20px; height: auto; overflow: visible; }
-.ignore .shop-item { padding: 10px; border-radius: 8px; }
-.ignore .shop-item .shop-image { height: 140px; }
-.ignore .shop-item {
-  display: block;
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 12px;
-  transition: box-shadow .2s ease, transform .2s ease;
-}
-
-.ignore .shop-item:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.ignore .shop-item .shop-image {
-  width: 100%;
-  height: 160px;
-  margin-right: 0;
-}
-
-.ignore .shop-item .shop-info {
-  margin-top: 10px;
-}
+.ignore .category-section { background:#fff; border-radius:12px; padding: 12px 16px; }
+.ignore .sort-section { background:#fff; border-radius:12px; padding: 8px 16px; margin-top: 8px; }
+.ignore .search-results { padding: 12px 0 20px; height: auto; overflow: visible; background: transparent; }
+.ignore .shop-item { display:flex; background:#fff; border:1px solid #eee; border-radius:10px; padding:12px; margin-bottom:12px; transition: box-shadow .2s, transform .2s; }
+.ignore .shop-item:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.ignore .shop-item .shop-image { width:160px; height:120px; margin-right:16px; }
+.ignore .shop-item .shop-info { margin-top:0; }
 </style>

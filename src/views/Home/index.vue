@@ -114,7 +114,7 @@ const currentPage = ref(1); // 当前页码
 const currentCity = ref('上海'); // 当前城市
 
 // 桌面端网格列数
-const gridColumnNum = computed(() => (isDesktop.value ? 6 : 4));
+const gridColumnNum = computed(() => (isDesktop.value ? 5 : 4));
 
 // 轮播图数据
 const banners = ref([
@@ -646,19 +646,21 @@ onUnmounted(() => {
 
 /* 桌面端样式（忽略 px-to-viewport 转换） */
 .ignore {
-  /* 根容器自身收窄为 1/3 并居中 */
+  /* 根容器限宽并居中，Header 粘顶+紧凑搜索；Banner 卡片化圆角；宫格设置为 5 列白卡；列表为白色卡片、左图右文，悬浮态阴影。 */
   &.home-page {
-    width: 50vw;
+    width: min(1120px, 72vw);
     margin: 0 auto;
-    /* 允许页面使用浏览器原生滚动，不在容器内滚动 */
     height: auto;
     min-height: 100vh;
     overflow: visible;
   }
 
-  /* 头部与搜索框更紧凑 */
+  /* 头部粘顶、紧凑搜索 */
   .home-header {
-    padding: 8px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 10px 16px;
 
     :deep(.van-search) {
       .van-search__content {
@@ -668,35 +670,62 @@ onUnmounted(() => {
     }
   }
 
-  /* Banner 降低高度，减少首屏占用 */
-  .home-swipe { height: 220px; }
+  /* Banner 卡片化：圆角、轻降高度 */
+  .home-swipe {
+    height: 180px;
+    margin: 12px 0 8px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
 
-  /* 宫格：减小间距和图标尺寸 */
+  /* 宫格为白卡容器，5 列更稳态 */
   .home-grid {
-    margin: 12px auto;
-    padding: 12px 0;
+    margin: 8px 0 12px;
+    padding: 12px 8px;
+    background: #fff;
+    border-radius: 12px;
 
     :deep(.van-grid-item__content) {
-      padding: 12px 6px;
+      padding: 10px 6px;
       gap: 4px;
     }
 
-    .grid-icon { width: 28px; height: 28px; }
+    .grid-icon { width: 30px; height: 30px; }
     :deep(.van-grid-item__text) { font-size: 13px; }
   }
 
-  /* 列表：卡片留白略收紧 */
-  .shop-list { gap: 14px; }
+  /* 列表整体使用页面滚动，区块背景透明，由每个卡片承载背景 */
+  .shop-list {
+    padding: 0;
+    background: transparent;
+    display: block;
+  }
+
+  /* 列表项：白色卡片、左图右文、悬浮阴影 */
+  .shop-item {
+    background: #fff;
+    margin: 0 0 12px 0;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 12px;
+    transition: box-shadow .2s ease, transform .2s ease;
+  }
+  .shop-item:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+
+  .shop-item .shop-image {
+    width: 160px;
+    height: 120px;
+    margin-right: 16px;
+  }
+
+  .shop-item .shop-name { font-size: 16px; }
 }
 
 /* PC 下主页主体用文档流滚动，避免内部滚动条 */
 .shop-list {
-  padding: 16px 24px;
+  padding: 16px 0; /* 调整为容器内留白，由卡片承担背景 */
   background-color: #f6f7f9;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  align-content: start;
+  display: block; /* 由卡片自身间距管理流式布局 */
   /* 释放内部滚动，由页面滚动 */
   height: auto;
   overflow: visible;

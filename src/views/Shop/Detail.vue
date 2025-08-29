@@ -305,14 +305,14 @@ onUnmounted(() => {
 
 /* 桌面端样式（忽略 px-to-viewport 转换） */
 .ignore {
-  .shop-detail-page { width: 50vw; margin: 0 auto; }
-  .shop-info { width: 50vw; margin: 12px auto; display: block; gap: 0; }
-  .product-list { width: 50vw; margin: 12px auto 20px; padding: 0 12px; background: transparent; }
+  .shop-detail-page { width: min(1120px, 72vw); margin: 0 auto; }
+  .shop-info { width: min(1120px, 72vw); margin: 12px auto; display: block; gap: 0; }
+  .product-list { width: min(1120px, 72vw); margin: 12px auto 20px; padding: 0; background: transparent; }
 
   /* 更紧凑的标题与列表卡片 */
   .section-title { padding: 6px 0 10px; font-size: 16px; }
   :deep(.van-list) { gap: 12px; }
-  .product-item { padding: 10px; border-radius: 8px; }
+  .product-item { padding: 12px; border-radius: 10px; border:1px solid #eee; }
   .product-item .product-image { height: 140px; }
 }
 
