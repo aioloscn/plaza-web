@@ -1,5 +1,5 @@
 <template>
-  <div class="home-page">
+  <div class="home-page" :class="{ ignore: isDesktop }">
     <!-- 头部搜索栏 -->
     <div class="home-header">
       <div class="header-content">
@@ -26,7 +26,7 @@
 
     <!-- 功能入口 -->
     <div class="home-grid">
-      <van-grid :column-num="4" :border="false">
+      <van-grid :column-num="gridColumnNum" :border="false">
         <van-grid-item
           v-for="(item, index) in gridItems"
           :key="index"
@@ -76,8 +76,8 @@
       <div v-if="finished" class="finished-text">没有更多了</div>
     </div>
 
-    <!-- 底部导航 -->
-    <van-tabbar v-model="activeTab" @change="onTabChange" fixed>
+    <!-- 底部导航（PC 隐藏） -->
+    <van-tabbar v-show="!isDesktop" v-model="activeTab" @change="onTabChange" fixed>
       <van-tabbar-item icon="home-o" to="/">首页</van-tabbar-item>
       <van-tabbar-item icon="search" to="/search">搜索</van-tabbar-item>
       <van-tabbar-item icon="user-o" to="/user">我的</van-tabbar-item>
@@ -86,14 +86,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { searchCategory, getShopRecommend } from '@/api';
 import { shopApi } from '@/api';
 import { GeolocationService } from '@/utils/geolocation';
+import { getLocationCache, setLocationCache } from '@/utils/storage';
 import { showToast, showLoadingToast, closeToast } from 'vant';
 
 const router = useRouter();
+
+// 端类型检测（>=1200 视为桌面端）
+const isDesktop = ref(false);
+const updateIsDesktop = () => {
+  isDesktop.value = window.innerWidth >= 1200;
+};
 
 // 响应式数据
 const searchValue = ref('');
@@ -105,6 +112,9 @@ const userLocation = ref(null); // 用户位置信息
 const shopList = ref([]);
 const currentPage = ref(1); // 当前页码
 const currentCity = ref('上海'); // 当前城市
+
+// 桌面端网格列数
+const gridColumnNum = computed(() => (isDesktop.value ? 8 : 4));
 
 // 轮播图数据
 const banners = ref([
@@ -121,17 +131,13 @@ const gridItems = ref([
   { icon: 'star-o', text: '娱乐', type: 'entertainment', id: 4 }
 ])
 
-// 新增：获取分类数据
+// 获取分类数据
 const fetchCategories = async () => {
-  console.log('🚀 开始获取分类数据...')
   try {
-    console.log('📡 调用searchCategory API...')
     const response = await searchCategory()
-    console.log('✅ API响应成功:', response)
     
     const data = response.data || response
     categories.value = data
-    console.log('📊 处理后的分类数据:', data)
     
     // 将分类数据映射到网格组件
     if (data && Array.isArray(data) && data.length > 0) {
@@ -142,32 +148,26 @@ const fetchCategories = async () => {
         id: category.id || index
       }))
       gridItems.value = mappedData
-      console.log('🎯 成功映射网格数据:', mappedData)
-      console.log('🖼️ 使用的图标URL:', mappedData.map(item => ({ text: item.text, icon: item.icon })))
-    } else {
-      console.log('⚠️ API返回数据为空或格式不正确，保持默认数据')
     }
   } catch (error) {
-    console.error('❌ 获取分类失败:', error)
-    console.error('📋 错误详情:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      url: error.config?.url
-    })
-    console.log('🔄 保持使用默认网格数据')
+    // 获取分类失败，保持默认数据
   }
 }
 
 // 处理网格点击
 const handleGridClick = (item) => {
-  // 根据类型跳转到不同页面
-  console.log('点击了:', item.text)
+  // 跳转到搜索页面并传递类目ID
+  router.push({
+    path: '/search',
+    query: {
+      categoryId: item.id,
+      categoryName: item.text
+    }
+  })
 }
 
 // 处理图片加载错误
 const handleImageError = (event, item) => {
-  console.log('图片加载失败:', item.icon)
   // 使用默认图标作为后备
   event.target.style.display = 'none'
   event.target.parentNode.innerHTML = `<van-icon name="shop-o" size="24" />`
@@ -175,7 +175,7 @@ const handleImageError = (event, item) => {
 
 // 处理底部导航切换
 const onTabChange = (index) => {
-  console.log('切换到标签:', index)
+  // 可以在这里添加切换逻辑
 }
 
 // 滚动监听函数
@@ -189,16 +189,11 @@ const handleScroll = (event) => {
 
 // 加载更多商家列表
 const loadMoreShops = async () => {
-  console.log('🔄 开始加载更多商家数据');
-  
   if (finished.value || loading.value) {
-    console.log('⏸️ 跳过加载：', finished.value ? '已完成' : '正在加载中');
     return;
   }
   
   const nextPage = currentPage.value + 1;
-  console.log('📄 准备加载第', nextPage, '页');
-  
   loading.value = true;
   
   try {
@@ -213,9 +208,7 @@ const loadMoreShops = async () => {
       }
     };
     
-    console.log('🔄 加载更多店铺数据:', requestData);
     const response = await getShopRecommend(requestData);
-    console.log('✅ 更多店铺数据响应:', response);
     
     if (response && response.data && response.data.records && response.data.records.length > 0) {
       const newShops = response.data.records.map(shop => ({
@@ -230,21 +223,16 @@ const loadMoreShops = async () => {
       }));
       shopList.value.push(...newShops);
       currentPage.value = nextPage; // 更新当前页码
-      console.log('🏪 成功加载更多店铺:', newShops.length, '个，总数:', shopList.value.length);
       
       // 根据API返回的hasNext字段判断是否还有更多数据
       if (!response.data.hasNext) {
         finished.value = true;
-        console.log('📄 没有更多数据了');
       }
     } else {
-      console.log('📄 没有更多数据了');
       finished.value = true;
     }
   } catch (error) {
-    console.error('❌ 加载更多商家失败:', error);
     // API失败时使用模拟数据进行分页
-    console.log('🔄 API失败，使用模拟数据分页');
     const startIndex = (nextPage - 1) * 10;
     const endIndex = startIndex + 10;
     const totalMockData = 30; // 总共30条模拟数据
@@ -264,25 +252,16 @@ const loadMoreShops = async () => {
       }
       shopList.value.push(...mockShops);
       currentPage.value = nextPage;
-      console.log('🏪 成功加载模拟数据:', mockShops.length, '个，总数:', shopList.value.length);
       
       // 检查是否还有更多数据
       if (endIndex >= totalMockData) {
         finished.value = true;
-        console.log('📄 模拟数据已全部加载完成');
       }
     } else {
       finished.value = true;
-      console.log('📄 没有更多模拟数据了');
     }
   } finally {
     loading.value = false;
-    console.log('✅ 加载完成，当前状态:', { 
-      loading: loading.value, 
-      finished: finished.value, 
-      currentPage: currentPage.value,
-      shopListLength: shopList.value.length 
-    });
   }
 }
 
@@ -291,6 +270,20 @@ const loadMoreShops = async () => {
  */
 const getUserLocation = async () => {
   try {
+    // 首先检查缓存
+    const cachedLocation = getLocationCache();
+    if (cachedLocation) {
+  
+      userLocation.value = cachedLocation;
+      
+      // 根据经纬度获取城市名称
+      await getCityNameByLocation(cachedLocation.longitude, cachedLocation.latitude);
+      
+      // 获取位置成功后，加载附近商家
+      await loadNearbyShops(cachedLocation.longitude, cachedLocation.latitude);
+      return;
+    }
+    
     showLoadingToast({
       message: '正在获取位置信息...',
       forbidClick: true,
@@ -298,6 +291,9 @@ const getUserLocation = async () => {
     
     const position = await GeolocationService.getCurrentPosition();
     userLocation.value = position;
+    
+    // 缓存位置信息
+    setLocationCache(position);
     
     // 根据经纬度获取城市名称
     await getCityNameByLocation(position.longitude, position.latitude);
@@ -336,12 +332,10 @@ const loadNearbyShops = async (longitude, latitude) => {
       }
     };
     
-    console.log('🏪 调用店铺推荐API:', requestData);
     const response = await getShopRecommend(requestData);
-    console.log('✅ 店铺推荐API响应:', response);
     
     if (response && response.data && response.data.records) {
-      console.log('🔍 API返回的原始数据结构:', response.data.records[0]); // 打印第一个店铺的数据结构
+
       const shops = response.data.records.map(shop => ({
         ...shop,
         // 确保字段映射正确
@@ -354,20 +348,19 @@ const loadNearbyShops = async (longitude, latitude) => {
       }));
       shopList.value = shops;
       currentPage.value = 1; // 设置当前页为1
-      console.log('🏪 成功加载店铺列表:', shops);
-      console.log('🏪 处理后的第一个店铺数据:', shops[0]);
+
       
       // 根据API返回的hasNext字段判断是否还有更多数据
       if (!response.data.hasNext) {
         finished.value = true;
-        console.log('📄 当前页已是最后一页');
+
       }
     } else {
-      console.log('⚠️ 店铺推荐API返回数据为空');
+
       await loadDefaultShops();
     }
   } catch (error) {
-    console.error('❌ 加载附近商家失败:', error);
+
     showToast('获取附近商家失败');
     await loadDefaultShops();
   }
@@ -377,7 +370,7 @@ const loadNearbyShops = async (longitude, latitude) => {
  * 加载默认商家列表（仅在定位失败时使用模拟数据）
  */
 const loadDefaultShops = async () => {
-  console.log('🏪 定位失败，使用模拟店铺数据');
+
   // 重置分页状态
   currentPage.value = 1;
   finished.value = false;
@@ -398,13 +391,13 @@ const loadDefaultShops = async () => {
   
   // 只显示前10个，模拟第一页数据
   shopList.value = mockShops.slice(0, 10);
-  console.log('🏪 成功加载模拟店铺列表，共', shopList.value.length, '个');
+
 };
 
 // 根据经纬度获取城市名称
 const getCityNameByLocation = async (longitude, latitude) => {
   try {
-    console.log('根据经纬度获取城市:', longitude, latitude);
+
     
     // 简单的经纬度到城市映射（实际项目中应该使用地理编码API）
     const cityMap = {
@@ -437,10 +430,10 @@ const getCityNameByLocation = async (longitude, latitude) => {
     }
     
     currentCity.value = closestCity;
-    console.log('获取到城市名称:', currentCity.value);
+
     
   } catch (error) {
-    console.error('获取城市名称失败:', error);
+
     // 保持默认城市名称
   }
 };
@@ -450,15 +443,49 @@ const handleShopImageError = (event) => {
   event.target.src = '/images/shop-default.svg';
 };
 
-// 显示城市选择器
-const showCityPicker = () => {
-  showToast('城市选择功能开发中...');
-};
+// 显示城市选择器 - 重新获取位置
+const showCityPicker = async () => {
+  try {
+    showLoadingToast({
+      message: '正在重新获取位置...',
+      forbidClick: true,
+    });
+    
+    // 清除位置缓存，强制重新获取
+    localStorage.removeItem('user_location_cache');
+    
+    // 重新获取位置
+    const position = await GeolocationService.getCurrentPosition();
+    userLocation.value = position;
+    
+    // 缓存新的位置信息
+    setLocationCache(position);
+    
+    // 根据经纬度获取城市名称
+    await getCityNameByLocation(position.longitude, position.latitude);
+    
+    // 重新加载附近商家
+    await loadNearbyShops(position.longitude, position.latitude);
+    
+    closeToast();
+    showToast('位置更新成功');
+  } catch (error) {
+    closeToast();
+
+    showToast('获取位置失败，请检查定位权限');
+   }
+ };
 
 // 页面加载时的初始化
 onMounted(async () => {
+  updateIsDesktop();
+  window.addEventListener('resize', updateIsDesktop);
   await fetchCategories();
   await getUserLocation(); // 获取用户位置并加载附近商家
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsDesktop);
 });
 </script>
 
@@ -612,6 +639,108 @@ onMounted(async () => {
       .distance {
         color: $text-color-3;
         font-size: 12px;
+      }
+    }
+  }
+}
+
+/* 桌面端样式（忽略 px-to-viewport 转换） */
+.ignore {
+  /* 居中容器和更舒适的留白 */
+  .home-header {
+    padding: 12px 24px;
+    
+    :deep(.van-search) {
+      .van-search__content {
+        border-radius: 22px;
+      }
+    }
+  }
+
+  .home-swipe {
+    height: 320px;
+  }
+
+  .home-grid {
+    margin: 20px auto;
+    padding: 16px 0;
+    max-width: 1200px;
+    
+    :deep(.van-grid-item__content) {
+      padding: 16px 8px;
+    }
+  }
+
+  .grid-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .shop-list {
+    padding: 16px 24px;
+    background-color: #f6f7f9;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-content: start;
+
+    .list-title {
+      grid-column: 1 / -1;
+      padding: 16px 8px;
+      font-size: 18px;
+      border: none;
+      background: transparent;
+    }
+
+    .loading-text,
+    .finished-text {
+      grid-column: 1 / -1;
+      background: transparent;
+    }
+  }
+
+  .shop-item {
+    display: block;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .shop-image {
+      width: 100%;
+      height: 160px;
+      margin-right: 0;
+      margin-bottom: 10px;
+
+      img {
+        border-radius: 6px;
+      }
+    }
+
+    .shop-info {
+      .shop-name {
+        font-size: 16px;
+        margin-bottom: 6px;
+      }
+
+      .shop-rating {
+        margin-bottom: 6px;
+      }
+
+      .shop-tags {
+        margin-bottom: 10px;
+      }
+
+      .shop-price {
+        .price-text { font-size: 14px; }
+        .distance { font-size: 12px; }
       }
     }
   }
