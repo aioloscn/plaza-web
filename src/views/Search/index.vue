@@ -1,5 +1,5 @@
 <template>
-  <div class="search-page">
+  <div class="search-page" :class="{ ignore: isDesktop }">
     <!-- 搜索头部 -->
     <div class="search-header">
       <van-search
@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onActivated, nextTick } from 'vue'
+import { ref, computed, onMounted, onActivated, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
 import { shopApi } from '@/api/modules/shop'
@@ -153,6 +153,12 @@ const userLocation = ref({
   latitude: 39.915     // 默认北京纬度
 })
 const locationReady = ref(false) // 位置获取完成标识
+
+// Desktop 侦测（>=1200px 视为 PC），用于切换到 PC-only 样式命名空间（ignore）
+const isDesktop = ref(false)
+const updateIsDesktop = () => {
+  isDesktop.value = typeof window !== 'undefined' && window.innerWidth >= 1200
+}
 
 // 类目相关数据
 const categories = ref([])
@@ -321,6 +327,12 @@ const handleImageError = (event, item) => {
 
 // 组件挂载时获取位置并聚焦搜索框
 onMounted(async () => {
+  // 侦测端类型并监听窗口变化
+  updateIsDesktop()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', updateIsDesktop)
+  }
+
   await fetchCategories()
   
   // 检查是否有来自首页的类目参数
@@ -340,6 +352,12 @@ onMounted(async () => {
   }
   
   focusSearchInput()
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateIsDesktop)
+  }
 })
 
 // 页面激活时聚焦搜索框（处理从其他页面返回的情况）
@@ -680,5 +698,56 @@ const clearHistory = () => {
 
 .empty-state {
   padding: 60px 20px;
+}
+
+/* Desktop（PC）样式：当根元素带有 ignore 类时生效，且被 px-to-viewport 排除，不会转 vw */
+.ignore.search-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ignore .search-header {
+  padding: 16px 20px;
+}
+
+.ignore .category-section {
+  padding: 20px;
+}
+
+.ignore .sort-section {
+  padding: 12px 20px;
+}
+
+.ignore .search-results {
+  padding: 16px 20px 24px;
+}
+
+.ignore .search-results :deep(.van-list) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ignore .shop-item {
+  display: block;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.ignore .shop-item:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.ignore .shop-item .shop-image {
+  width: 100%;
+  height: 160px;
+  margin-right: 0;
+}
+
+.ignore .shop-item .shop-info {
+  margin-top: 10px;
 }
 </style>
