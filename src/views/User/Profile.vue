@@ -1,5 +1,6 @@
 <template>
-  <div class="profile-page">
+  <!-- 添加 ignore 命名空间以在桌面端禁用 px-to-viewport 转换 -->
+  <div class="profile-page" :class="{ ignore: isDesktop }">
     <!-- 头部导航 -->
     <van-nav-bar
       title="个人中心"
@@ -102,8 +103,8 @@
       </van-button>
     </div>
 
-    <!-- 底部导航 -->
-    <van-tabbar v-model="activeTab">
+    <!-- 底部导航（桌面端隐藏） -->
+    <van-tabbar v-if="!isDesktop" v-model="activeTab">
       <van-tabbar-item icon="home-o" to="/">首页</van-tabbar-item>
       <van-tabbar-item icon="search" to="/search">搜索</van-tabbar-item>
       <van-tabbar-item icon="user-o" to="/user">我的</van-tabbar-item>
@@ -112,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import { useUserStore } from '@/store/modules/user'
@@ -125,6 +126,14 @@ const logoutLoading = ref(false)
 
 const isLoggedIn = computed(() => userStore.isLoggedIn)
 const userInfo = computed(() => userStore.userInfo)
+
+// 桌面端检测（>=1200px）
+const isDesktop = ref(typeof window !== 'undefined' ? window.innerWidth >= 1200 : false)
+const updateIsDesktop = () => {
+  if (typeof window !== 'undefined') {
+    isDesktop.value = window.innerWidth >= 1200
+  }
+}
 
 // 退出登录
 const handleLogout = async () => {
@@ -144,6 +153,20 @@ const handleLogout = async () => {
     logoutLoading.value = false
   }
 }
+
+onMounted(() => {
+  // 监听窗口变化，切换 PC/H5 样式
+  updateIsDesktop()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', updateIsDesktop)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateIsDesktop)
+  }
+})
 
 onMounted(() => {
   // 如果已登录但没有用户信息，获取用户信息
@@ -199,6 +222,70 @@ onMounted(() => {
   
   .van-button {
     margin-top: 20px;
+  }
+}
+
+/* 桌面端样式（通过 .ignore 禁用 px-to-viewport 转换） */
+.ignore {
+  .profile-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 24px; /* 桌面端隐藏 Tabbar，因此减少底部留白 */
+  }
+
+  .van-nav-bar {
+    padding: 0 16px;
+  }
+
+  .user-info {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 24px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+
+    .user-avatar {
+      margin-right: 20px;
+
+      /* 放大头像尺寸 */
+      .van-image {
+        width: 96px !important;
+        height: 96px !important;
+      }
+    }
+
+    .user-details {
+      .username {
+        font-size: 20px;
+      }
+
+      .user-phone {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .menu-section {
+    max-width: 1200px;
+    margin: 16px auto;
+    padding: 0 16px;
+
+    /* 增强桌面端单元样式的触达面积与对比度 */
+    :deep(.van-cell) {
+      font-size: 16px;
+      padding: 16px 12px;
+    }
+  }
+
+  .logout-section {
+    max-width: 600px;
+    margin: 24px auto 48px;
+  }
+
+  /* 双保险：即使忘记 v-if 也不显示 Tabbar */
+  :deep(.van-tabbar) {
+    display: none;
   }
 }
 </style>
