@@ -648,7 +648,7 @@ onUnmounted(() => {
 .ignore {
   /* 根容器限宽并居中，Header 粘顶+紧凑搜索；Banner 卡片化圆角；宫格设置为 5 列白卡；列表为白色卡片、左图右文，悬浮态阴影。 */
   &.home-page {
-    width: min(1120px, 72vw);
+    width: min(1400px, 96vw); /* 别留白：再宽一些，接近参考图 */
     margin: 0 auto;
     height: auto;
     min-height: 100vh;
@@ -725,7 +725,7 @@ onUnmounted(() => {
 
   .shop-item .shop-image {
     width: 100%;
-    height: 200px;
+    height: 220px; /* 视觉更饱满 */
     margin: 0 0 10px 0;
   }
 
