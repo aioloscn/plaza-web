@@ -700,8 +700,9 @@ const clearHistory = () => {
 
 /* Desktop（PC）样式：更紧凑的尺寸 */
 .ignore.search-page {
-  width: min(1120px, 72vw);
-  margin: 0 auto;
+-    width: min(1120px, 72vw);
++    width: min(1400px, 96vw); /* 与首页保持一致，减少留白 */
+     margin: 0 auto;
   height: auto;
   min-height: 100vh;
   overflow: visible;
@@ -711,9 +712,19 @@ const clearHistory = () => {
 .ignore .search-header :deep(.van-search__content) { height: 36px; border-radius: 18px; }
 .ignore .category-section { background:#fff; border-radius:12px; padding: 12px 16px; }
 .ignore .sort-section { background:#fff; border-radius:12px; padding: 8px 16px; margin-top: 8px; }
-.ignore .search-results { padding: 12px 0 20px; height: auto; overflow: visible; background: transparent; }
-.ignore .shop-item { display:flex; background:#fff; border:1px solid #eee; border-radius:10px; padding:12px; margin-bottom:12px; transition: box-shadow .2s, transform .2s; }
-.ignore .shop-item:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
-.ignore .shop-item .shop-image { width:160px; height:120px; margin-right:16px; }
+.ignore .search-results {
+-  padding: 12px 0 20px; height: auto; overflow: visible; background: transparent;
++  padding: 12px 0 20px; height: auto; overflow: visible; background: transparent;
++  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+}
+.ignore .shop-item {
+-  display:flex; background:#fff; border:1px solid #eee; border-radius:10px; padding:12px; margin-bottom:12px; transition: box-shadow .2s, transform .2s;
++  display:block; background:#fff; border:1px solid #eee; border-radius:12px; padding:12px; transition: box-shadow .2s, transform .2s;
+}
+.ignore .shop-item:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.06); transform: translateY(-2px); }
+.ignore .shop-item .shop-image {
+-  width:160px; height:120px; margin-right:16px;
++  width:100%; height:220px; margin:0 0 10px 0; object-fit:cover; border-radius:10px;
+}
 .ignore .shop-item .shop-info { margin-top:0; }
 </style>
