@@ -499,6 +499,7 @@ const clearHistory = () => {
 .search-page {
   height: 100vh;
   display: flex;
+  flex-direction: column; /* 修复横向排列导致的布局错乱 */
   overflow: hidden;
 }
 
@@ -700,20 +701,35 @@ const clearHistory = () => {
 
 /* Desktop（PC）样式：更紧凑的尺寸 */
 .ignore.search-page {
-    width: min(1400px, 96vw); /* 与首页保持一致，减少留白 */
-    margin: 0 auto;
+  /* 根容器：保持原有限宽与居中 */
+  width: min(1400px, 96vw);
+  margin: 0 auto;
   height: auto;
   min-height: 100vh;
   overflow: visible;
+  /* 等比缩放参数：可按需要细调 */
+  --pc-scale: 0.82; /* 略小，让除搜索框外的字体略缩小 */
 }
 
-.ignore .search-header { position: sticky; top: 0; z-index: 20; padding: 10px 16px; }
+/* 仅缩放内部内容：外层容器尺寸不变 */
+.ignore.search-page > * {
+  transform: scale(var(--pc-scale));
+  transform-origin: top center;
+  width: calc(100% / var(--pc-scale));
+  margin-left: calc((100% - 100% / var(--pc-scale)) / 2);
+}
+
+/* 保持搜索框的可读性：不参与全局缩放 */
+.ignore.search-page > .search-header { transform: none; width: 100%; margin-left: 0; }
+.ignore .search-header {
+  position: sticky; top: 0; z-index: 20; padding: 12px 16px 14px; margin-bottom: 12px;
+}
 .ignore .search-header :deep(.van-search__content) { height: 36px; border-radius: 18px; }
 .ignore .category-section { background:#fff; border-radius:12px; padding: 12px 16px; }
 .ignore .sort-section { background:#fff; border-radius:12px; padding: 8px 16px; margin-top: 8px; }
 .ignore .search-results {
   padding: 12px 0 20px; height: auto; overflow: visible; background: transparent;
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
 }
 .ignore .shop-item {
   display:block; background:#fff; border:1px solid #eee; border-radius:12px; padding:12px; transition: box-shadow .2s, transform .2s;
@@ -723,4 +739,8 @@ const clearHistory = () => {
   width:100%; height:220px; margin:0 0 10px 0; object-fit:cover; border-radius:10px;
 }
 .ignore .shop-item .shop-info { margin-top:0; }
+
+/* 移动端：确保内容区占满白底而不是露出左侧橙色背景 */
+.search-page { background: $background-color; }
+.search-header { background-color: $primary-color; }
 </style>

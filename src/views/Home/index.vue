@@ -62,7 +62,7 @@
         <div class="shop-info">
           <div class="shop-name">{{ shop.name }}</div>
           <div class="shop-rating" v-if="shop.score !== undefined">
-            <van-rate v-model="shop.score" :readonly="true" :size="14" color="#ffd21e" void-color="#eee" />
+            <van-rate v-model="shop.score" :readonly="true" :size="18" color="#ffd21e" void-color="#eee" />
             <span class="score-text">({{ shop.score }})</span>
           </div>
           <div class="shop-tags" v-if="shop.tags">{{ shop.tags }}</div>
@@ -518,6 +518,7 @@ onUnmounted(() => {
     
     .city-name {
       font-weight: 500;
+      font-size: 16px;
     }
   }
   
@@ -544,8 +545,7 @@ onUnmounted(() => {
 
 .home-grid {
   background-color: #fff;
-  margin: 10px 0;
-  padding: 15px 0;
+  margin: 0 0 10px 0;
 }
 
 .grid-icon {
@@ -564,7 +564,7 @@ onUnmounted(() => {
   .list-title {
     padding: 15px;
     background-color: #fff;
-    font-size: 16px;
+    font-size: 6px;
     font-weight: bold;
     border-bottom: 1px solid #f0f0f0;
   }
@@ -644,6 +644,10 @@ onUnmounted(() => {
   }
 }
 
+/* 移动端：保证轮播可见高度 */
+.home-swipe { height: 160px; margin: 10px 0; }
+.home-swipe img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 /* 桌面端样式（忽略 px-to-viewport 转换） */
 .ignore {
   /* 根容器限宽并居中，Header 粘顶+紧凑搜索；Banner 卡片化圆角；宫格设置为 5 列白卡；列表为白色卡片、左图右文，悬浮态阴影。 */
@@ -660,38 +664,78 @@ onUnmounted(() => {
     position: sticky;
     top: 0;
     z-index: 20;
-    padding: 10px 16px;
+    padding: 14px 18px 16px; // 再加一点内边距，腾出空间
+    margin-bottom: 16px; // 与轮播留更明显间距
+
+    .city-selector .city-name {
+      font-size: 30px;
+    }
 
     :deep(.van-search) {
+      padding: 0; // 去除多余内边距
+
       .van-search__content {
-        height: 36px;
-        border-radius: 18px;
+        height: 54px; // 再大一档
+        border-radius: 27px;
+        overflow: hidden; // 保持图标在搜索框内
+        display: flex;
+        align-items: center;
+        padding: 0 16px; // 确保图标有足够空间
       }
+      
+      .van-field__left-icon { 
+        --van-field-icon-size: 24px;
+        margin-right: 8px;
+        flex-shrink: 0;
+      }
+      .van-field__control {
+        height: 54px;
+        line-height: 54px;
+        font-size: 16px; // 保持不变
+      }
+      .van-field__control::placeholder { color: #9aa4b2; }
+      .van-search__action { font-size: 14px; }
     }
-  }
+     }
 
   /* Banner 卡片化：圆角、轻降高度 */
   .home-swipe {
-    height: 180px;
-    margin: 12px 0 8px;
+    height: 300px;
+    margin: 0; // 由 header 提供上间距
     border-radius: 12px;
     overflow: hidden;
   }
 
   /* 宫格为白卡容器，5 列更稳态 */
   .home-grid {
-    margin: 8px 0 12px;
-    padding: 12px 8px;
+    margin: 16px 0 0;
+    padding: 16px 12px 80px 12px;
     background: #fff;
     border-radius: 12px;
 
     :deep(.van-grid-item__content) {
-      padding: 10px 6px;
-      gap: 4px;
+      padding: 8px 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: auto !important;
+      min-height: 50px !important;
+      max-height: 60px;
     }
 
-    .grid-icon { width: 30px; height: 30px; }
-    :deep(.van-grid-item__text) { font-size: 13px; }
+    .grid-icon { width: 60px; height: 60px; }
+    :deep(.van-grid-item__text) { font-size: 24px; font-weight: 500; line-height: 1.2; }
+    :deep(.van-grid-item) { 
+      height: auto !important; 
+      min-height: 50px !important;
+      flex-basis: 25% !important;
+      width: 25% !important;
+      display: flex;
+      justify-content: center;
+    }
+    :deep(.van-grid-item__icon) { height: auto !important; }
+    :deep(.van-badge__wrapper) { height: auto; min-height: unset; }
   }
 
   /* 列表整体使用页面滚动，区块背景透明，由每个卡片承载背景 */
@@ -699,7 +743,7 @@ onUnmounted(() => {
     padding: 0;
     background: transparent;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr); // 改为 3 列
     gap: 12px;
   }
 
@@ -710,7 +754,7 @@ onUnmounted(() => {
     grid-column: 1 / -1;
     background: transparent;
     border: none;
-    padding: 4px 0 8px;
+    padding: 12px 0 0;
   }
 
   .shop-item {
@@ -729,14 +773,24 @@ onUnmounted(() => {
     margin: 0 0 10px 0;
   }
 
-  .shop-item .shop-name { font-size: 15px; }
+  .shop-item .shop-info .shop-name { font-size: 26px; }
+  
+  .shop-item .shop-info .shop-tags { font-size: 24px; }
+  
+  .shop-item .shop-info .shop-price .price-text { font-size: 24px; }
+  
+  .shop-item .shop-info .shop-rating .score-text { font-size: 24px; }
+  
+  .shop-item .shop-info .shop-price .distance { font-size: 24px; }
+  
+  .shop-item .shop-info .shop-rating :deep(.van-rate) { font-size: 18px; }
 
   /* 列表：5 列卡片流，上图下文（修正重复块，参数统一） */
   .shop-list {
     padding: 0;
     background: transparent;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr); // 改为 3 列
     gap: 12px;
   }
 
@@ -755,20 +809,6 @@ onUnmounted(() => {
     height: 220px;
     margin: 0 0 10px 0;
   }
-
-  .shop-item .shop-name { font-size: 15px; }
- }
-
-  .shop-item .shop-name { font-size: 16px; }
 }
 
-/* PC 下主页主体用文档流滚动，避免内部滚动条 */
-.shop-list {
-  padding: 16px 0; /* 调整为容器内留白，由卡片承担背景 */
-  background-color: #f6f7f9;
-  display: block; /* 由卡片自身间距管理流式布局 */
-  /* 释放内部滚动，由页面滚动 */
-  height: auto;
-  overflow: visible;
-}
 </style>
