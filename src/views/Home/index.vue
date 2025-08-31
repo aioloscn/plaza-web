@@ -65,11 +65,11 @@
             <van-rate v-model="shop.score" :readonly="true" :size="18" color="#ffd21e" void-color="#eee" />
             <span class="score-text">({{ shop.score }})</span>
           </div>
-          <div class="shop-tags" v-if="shop.tags">{{ shop.tags }}</div>
           <div class="shop-price">
             <span class="price-text">人均¥{{ shop.perCapitaPrice || shop.pricePerMan || shop.price }}</span>
             <span v-if="shop.distanceText" class="distance">{{ shop.distanceText }}</span>
           </div>
+          <div class="shop-tags" v-if="shop.tags">{{ shop.tags }}</div>
         </div>
       </div>
       <div v-if="loading" class="loading-text">加载中...</div>
@@ -116,12 +116,22 @@ const currentCity = ref('上海'); // 当前城市
 // 桌面端网格列数
 const gridColumnNum = computed(() => (isDesktop.value ? 5 : 4));
 
-// 轮播图数据
-const banners = ref([
-  { image: '/images/banner1.svg', title: '美食推荐' },
-  { image: '/images/banner2.svg', title: '酒店住宿' },
-  { image: '/images/banner3.svg', title: '团购优惠' }
-])
+// 轮播图数据 - 根据设备类型使用不同图片
+const banners = computed(() => {
+  if (isDesktop.value) {
+    return [
+      { image: '/images/pc-banner1.svg', title: '美食探索之旅' },
+      { image: '/images/pc-banner2.svg', title: '超市购物节' },
+      { image: '/images/pc-banner3.svg', title: '精品酒店' }
+    ]
+  } else {
+    return [
+      { image: '/images/banner1.svg', title: '美食推荐' },
+      { image: '/images/banner2.svg', title: '酒店住宿' },
+      { image: '/images/banner3.svg', title: '团购优惠' }
+    ]
+  }
+})
 
 // 功能网格数据 - 先设置一些默认数据确保页面有内容显示
 const gridItems = ref([
@@ -622,7 +632,6 @@ onUnmounted(() => {
     .shop-tags {
       font-size: 12px;
       color: $text-color-2;
-      margin-bottom: 8px;
     }
     
     .shop-price {
@@ -667,6 +676,10 @@ onUnmounted(() => {
     padding: 14px 18px 16px; // 再加一点内边距，腾出空间
     margin-bottom: 16px; // 与轮播留更明显间距
 
+    .city-selector {
+      gap: 0px;
+    }
+    
     .city-selector .city-name {
       font-size: 30px;
     }
@@ -704,6 +717,13 @@ onUnmounted(() => {
     margin: 0; // 由 header 提供上间距
     border-radius: 12px;
     overflow: hidden;
+    
+    img {
+      width: 55%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
   }
 
   /* 宫格为白卡容器，5 列更稳态 */

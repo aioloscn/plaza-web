@@ -10,7 +10,9 @@
         @search="handleSearchSubmit"
         @cancel="$router.go(-1)"
         @click="handleSearchClick"
+        @clear="handleClear"
         show-action
+        clearable
       />
     </div>
 
@@ -108,11 +110,11 @@
               <van-rate v-model="shop.score" :readonly="true" :size="14" color="#ffd21e" void-color="#eee" />
               <span class="score-text">({{ shop.score }})</span>
             </div>
-            <div class="shop-tags" v-if="shop.tags">{{ shop.tags }}</div>
             <div class="shop-price">
               <span class="price-text">人均¥{{ shop.perCapitaPrice || shop.price }}</span>
               <span v-if="shop.distanceText" class="distance">{{ shop.distanceText }}</span>
             </div>
+            <div class="shop-tags" v-if="shop.tags">{{ shop.tags }}</div>
           </div>
         </div>
         </van-list>
@@ -378,6 +380,15 @@ const handleHistoryClick = (keyword) => {
   onSearch()
 }
 
+// 处理清除搜索框
+const handleClear = () => {
+  searchValue.value = ''
+  selectedCategoryId.value = null
+  searchResults.value = []
+  finished.value = false
+  currentPage.value = 1
+}
+
 // 搜索
 const onSearch = async () => {
   // 检查是否有搜索条件（关键词或类目）
@@ -529,12 +540,17 @@ const clearHistory = () => {
         border: 1px solid #FF8400;
         border-radius: 8px;
       }
-      
       .van-grid-item__text {
         color: #FF8400;
         font-weight: bold;
       }
     }
+  }
+  
+  :deep(.van-grid-item.active .van-grid-item__content) {
+    background-color: #fff2e8 !important;
+    border: 1px solid #FF8400 !important;
+    border-radius: 8px !important;
   }
   
   .category-icon {
@@ -649,7 +665,8 @@ const clearHistory = () => {
     .shop-tags {
       font-size: 12px;
       color: $text-color-2;
-      margin-bottom: 8px;
+      margin-top: 2px;
+      margin-bottom: 2px;
     }
     
     .shop-price {
@@ -722,15 +739,141 @@ const clearHistory = () => {
 /* 保持搜索框的可读性：不参与全局缩放 */
 .ignore.search-page > .search-header { transform: none; width: 100%; margin-left: 0; }
 .ignore .search-header {
-  position: sticky; top: 0; z-index: 20; padding: 12px 16px 14px; margin-bottom: 12px;
+  position: sticky; top: 0; z-index: 20; padding: 14px 18px 16px; margin-bottom: 16px;
 }
-.ignore .search-header :deep(.van-search__content) { height: 36px; border-radius: 18px; }
-.ignore .category-section { background:#fff; border-radius:12px; padding: 12px 16px; }
-.ignore .sort-section { background:#fff; border-radius:12px; padding: 8px 16px; margin-top: 8px; }
+.ignore .search-header :deep(.van-search) {
+  padding: 0;
+}
+.ignore .search-header :deep(.van-search__content) {
+  height: 54px;
+  border-radius: 27px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+.ignore .search-header :deep(.van-field__left-icon) {
+  --van-field-icon-size: 24px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+.ignore .search-header :deep(.van-field__control) {
+  height: 54px;
+  line-height: 54px;
+  font-size: 16px;
+}
+.ignore .search-header :deep(.van-field__control::placeholder) {
+  color: #9aa4b2;
+}
+.ignore .search-header :deep(.van-search__action) {
+  font-size: 16px;
+  line-height: 0;
+  padding: 0 30px;
+}
+.ignore .search-header :deep(.van-icon-clear) {
+  font-size: 30px !important;
+  padding: 0;
+}
+.ignore .category-section { 
+  background:#fff; 
+  border-radius:12px;
+  padding: 16px 12px 20px 12px; 
+  margin-bottom: 0;
+  
+  :deep(.van-grid-item__content) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: auto !important;
+    min-height: 50px !important;
+    max-height: 60px;
+  }
+  
+  .category-icon { width: 73px; height: 73px; }
+  :deep(.van-grid-item__text) { font-size: 24px; font-weight: 500; line-height: 1.2; }
+  :deep(.van-grid-item) { 
+    height: auto !important; 
+    min-height: 50px !important;
+    width: 20% !important;
+    display: flex;
+    justify-content: center;
+    padding: 0 2.5% !important;
+  }
+  :deep(.van-grid-item__icon) { height: auto !important; }
+  :deep(.van-badge__wrapper) { height: auto; min-height: unset; }
+}
+.ignore .search-history {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  
+  .history-header {
+    font-size: 18px;
+    margin-bottom: 16px;
+    
+    span {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    :deep(.van-icon) {
+      font-size: 20px;
+      color: #999;
+      cursor: pointer;
+      
+      &:hover {
+        color: #FF8400;
+      }
+    }
+  }
+  
+  .history-tags {
+    gap: 12px;
+    
+    :deep(.van-tag) {
+      font-size: 16px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1.2;
+      height: auto;
+      min-height: unset;
+      
+      &:hover {
+        background-color: #fff2e8;
+        border-color: #FF8400;
+        color: #FF8400;
+      }
+    }
+  }
+}
+.ignore .sort-section {
+  background:#fff; 
+  border-radius:12px; 
+  margin-top: -30px; 
+  margin-bottom: -20px; 
+  padding: 30px 20px;
+  font-size: 24px;
+  
+  .sort-option {
+    gap: 0 !important;
+    height: 50px;
+  }
+}
 .ignore .search-results {
   padding: 12px 0 20px; height: auto; overflow: visible; background: transparent;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  flex: none !important;
 }
+
+.ignore .search-results :deep(.van-list) {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
 .ignore .shop-item {
   display:block; background:#fff; border:1px solid #eee; border-radius:12px; padding:12px; transition: box-shadow .2s, transform .2s;
 }
@@ -739,6 +882,12 @@ const clearHistory = () => {
   width:100%; height:220px; margin:0 0 10px 0; object-fit:cover; border-radius:10px;
 }
 .ignore .shop-item .shop-info { margin-top:0; }
+.ignore .shop-item .shop-info .shop-name { font-size: 26px; }
+.ignore .shop-item .shop-info .shop-tags { font-size: 24px; }
+.ignore .shop-item .shop-info .shop-price .price-text { font-size: 24px; }
+.ignore .shop-item .shop-info .shop-rating .score-text { font-size: 24px; }
+.ignore .shop-item .shop-info .shop-price .distance { font-size: 24px; }
+.ignore .shop-item .shop-info .shop-rating :deep(.van-rate) { font-size: 18px; }
 
 /* 移动端：确保内容区占满白底而不是露出左侧橙色背景 */
 .search-page { background: $background-color; }

@@ -1,0 +1,61 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#64B5F6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="300" fill="url(#grad3)"/>
+  
+  <!-- 背景装饰 -->
+  <circle cx="1050" cy="80" r="60" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="150" cy="200" r="40" fill="rgba(255,255,255,0.15)"/>
+  <circle cx="1150" cy="220" r="35" fill="rgba(255,255,255,0.12)"/>
+  
+  <!-- 主要内容区域 -->
+  <g transform="translate(280, 75)">
+    <!-- 标题 -->
+    <text x="0" y="40" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
+      精品酒店
+    </text>
+    
+    <!-- 副标题 -->
+    <text x="0" y="80" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.9)">
+      舒适住宿，贴心服务
+    </text>
+    
+    <!-- 酒店图标 -->
+    <g transform="translate(480, -15)">
+      <!-- 建筑主体 -->
+      <rect x="20" y="40" width="80" height="60" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="2"/>
+      <!-- 屋顶 -->
+      <path d="M15 40 L60 15 L105 40 Z" fill="white"/>
+      <!-- 窗户 -->
+      <rect x="30" y="50" width="12" height="15" fill="white"/>
+      <rect x="48" y="50" width="12" height="15" fill="white"/>
+      <rect x="68" y="50" width="12" height="15" fill="white"/>
+      <rect x="30" y="75" width="12" height="15" fill="white"/>
+      <rect x="68" y="75" width="12" height="15" fill="white"/>
+      <!-- 门 -->
+      <rect x="48" y="75" width="12" height="25" fill="white"/>
+      <circle cx="57" cy="87" r="1" fill="#2196F3"/>
+      <!-- 星星装饰 -->
+      <g transform="translate(110, 20)">
+        <path d="M0 8 L2 2 L8 0 L2 -2 L0 -8 L-2 -2 L-8 0 L-2 2 Z" fill="#FFD700"/>
+      </g>
+    </g>
+  </g>
+  
+  <!-- 底部装饰云朵 -->
+  <ellipse cx="100" cy="260" rx="50" ry="15" fill="rgba(255,255,255,0.2)"/>
+  <ellipse cx="300" cy="270" rx="40" ry="12" fill="rgba(255,255,255,0.15)"/>
+  <ellipse cx="900" cy="265" rx="60" ry="18" fill="rgba(255,255,255,0.1)"/>
+  
+  <!-- 评分标识 -->
+  <g transform="translate(80, 50)">
+    <rect x="0" y="0" width="80" height="30" rx="15" fill="rgba(255,255,255,0.9)"/>
+    <text x="40" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2196F3" text-anchor="middle">
+      五星推荐
+    </text>
+  </g>
+</svg>
