@@ -91,7 +91,7 @@ import { useRouter } from 'vue-router';
 import { searchCategory, getShopRecommend } from '@/api';
 import { shopApi } from '@/api';
 import { GeolocationService } from '@/utils/geolocation';
-import { getLocationCache, setLocationCache } from '@/utils/storage';
+import { getLocationCache, setLocationCache, removeLocationCache } from '@/utils/storage';
 import { showToast, showLoadingToast, closeToast } from 'vant';
 
 const router = useRouter();
@@ -461,8 +461,8 @@ const showCityPicker = async () => {
       forbidClick: true,
     });
     
-    // 清除位置缓存，强制重新获取
-    localStorage.removeItem('user_location_cache');
+    // 清除旧的定位缓存，使用统一的工具方法
+    removeLocationCache();
     
     // 重新获取位置
     const position = await GeolocationService.getCurrentPosition();
@@ -719,7 +719,7 @@ onUnmounted(() => {
     overflow: hidden;
     
     img {
-      width: 55%;
+      width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center;

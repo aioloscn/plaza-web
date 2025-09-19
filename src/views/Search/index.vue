@@ -8,7 +8,7 @@
         placeholder="搜索商家、美食"
         background="#FF8400"
         @search="handleSearchSubmit"
-        @cancel="$router.go(-1)"
+        @cancel="handleCancel"
         @click="handleSearchClick"
         @clear="handleClear"
         show-action
@@ -180,7 +180,7 @@ const searchHistory = computed(() => appStore.searchHistory)
 // 获取用户位置
 const getUserLocation = async () => {
   try {
-    // 首先检查缓存
+    // 检查缓存
     const cachedLocation = getLocationCache()
     if (cachedLocation) {
       userLocation.value = cachedLocation
@@ -188,14 +188,16 @@ const getUserLocation = async () => {
       return
     }
     
-    // 缓存不存在时才获取新位置
+    // 获取新位置
     const location = await GeolocationService.getCurrentPosition()
     userLocation.value = location
     
     // 缓存位置信息
     setLocationCache(location)
   } catch (error) {
-      // 使用默认位置（北京）
+    console.error('获取位置失败:', error)
+    // 使用默认位置（北京）
+    userLocation.value = { longitude: 116.404, latitude: 39.915 }
   } finally {
     locationReady.value = true
   }
@@ -251,11 +253,44 @@ const handleSearchClick = () => {
 const preloadImage = (src) => {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    img.onload = () => resolve(src)
-    img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
+    let timeoutId = null
+    let isResolved = false
+    
+    const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+      img.onload = null
+      img.onerror = null
+    }
+    
+    img.onload = () => {
+      if (!isResolved) {
+        isResolved = true
+        cleanup()
+        resolve(src)
+      }
+    }
+    
+    img.onerror = () => {
+      if (!isResolved) {
+        isResolved = true
+        cleanup()
+        reject(new Error(`Failed to load image: ${src}`))
+      }
+    }
+    
     img.src = src
+    
     // 设置超时
-    setTimeout(() => reject(new Error('Image load timeout')), 5000)
+    timeoutId = setTimeout(() => {
+      if (!isResolved) {
+        isResolved = true
+        cleanup()
+        reject(new Error('Image load timeout'))
+      }
+    }, 5000)
   })
 }
 
@@ -378,6 +413,17 @@ const handleSearchSubmit = () => {
 const handleHistoryClick = (keyword) => {
   searchValue.value = keyword
   onSearch()
+}
+
+// 处理取消按钮
+const handleCancel = () => {
+  // 检查是否有历史记录可以返回
+  if (window.history.length > 1) {
+    router.go(-1)
+  } else {
+    // 如果没有历史记录，返回首页
+    router.push('/')
+  }
 }
 
 // 处理清除搜索框

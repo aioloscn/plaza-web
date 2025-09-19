@@ -53,7 +53,7 @@ export const shopApi = {
       searchData.orderBy = orderBy;
     }
     
-    return request.post('/plaza-home/shop/search', {
+    return request.post('/plaza-home/shop/searchES', {
       page: {
         current: page,
         size: pageSize
