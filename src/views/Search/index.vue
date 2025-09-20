@@ -175,9 +175,7 @@ const locationReady = ref(false) // 位置获取完成标识
 
 // 标签统计相关数据
 const tagStats = ref([])
-const allTagsMap = ref(new Map()) // 累计统计所有标签
 const selectedTag = ref('') // 当前选中的标签
-const isTagFiltering = ref(false) // 是否正在进行标签筛选
 
 // Desktop 侦测（>=1200px 视为 PC），用于切换到 PC-only 样式命名空间（ignore）
 const isDesktop = ref(false)
@@ -200,47 +198,10 @@ const activeSort = ref('0') // 默认综合排序
 
 const searchHistory = computed(() => appStore.searchHistory)
 
-// 解析和统计标签
-const parseAndCountTags = (shops) => {
-  // 只有在非标签筛选状态时才累加标签数量
-  if (!isTagFiltering.value) {
-    shops.forEach(shop => {
-      if (shop.tags && typeof shop.tags === 'string') {
-        // 按空格分割标签
-        const tags = shop.tags.split(' ').filter(tag => tag.trim() !== '')
-        
-        tags.forEach(tag => {
-          const trimmedTag = tag.trim()
-          if (trimmedTag) {
-            // 累计统计
-            const currentCount = allTagsMap.value.get(trimmedTag) || 0
-            allTagsMap.value.set(trimmedTag, currentCount + 1)
-          }
-        })
-      }
-    })
-    
-    // 更新标签统计显示（按出现次数排序，取前10个）
-    const sortedTags = Array.from(allTagsMap.value.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10)
-    
-    tagStats.value = sortedTags
-  }
-}
 
-// 重置标签统计
-const resetTagStats = () => {
-  allTagsMap.value.clear()
-  tagStats.value = []
-}
 
 // 处理标签点击
 const handleTagClick = (tagName) => {
-  // 设置标签筛选状态
-  isTagFiltering.value = true
-  
   // 如果点击的是已选中的标签，则取消选中
   if (selectedTag.value === tagName) {
     selectedTag.value = ''
@@ -510,7 +471,6 @@ const handleClear = () => {
   searchValue.value = ''
   selectedCategoryId.value = null
   selectedTag.value = ''
-  isTagFiltering.value = false
   searchResults.value = []
   finished.value = false
   currentPage.value = 1
@@ -529,13 +489,10 @@ const onSearch = async () => {
     appStore.addSearchHistory(searchValue.value)
   }
   
-  // 重置标签筛选状态（新的搜索不是标签筛选）
-  isTagFiltering.value = false
+  // 重置选中的标签
   selectedTag.value = ''
   
   searchResults.value = []
-  resetTagStats()
-  selectedTag.value = '' // 重置选中的标签
   currentPage.value = 1
   finished.value = false
   onLoad()
@@ -601,12 +558,26 @@ const onLoad = async () => {
       
       if (currentPage.value === 1) {
         searchResults.value = formattedResults
+        
+        // 使用后端返回的标签聚合数据（从第一条记录中获取）
+        if (response.data.records && response.data.records.length > 0) {
+          const firstRecord = response.data.records[0]
+          console.log('第一条记录:', firstRecord)
+          console.log('tagAggregations:', firstRecord.tagAggregations)
+          
+          if (firstRecord.tagAggregations && Array.isArray(firstRecord.tagAggregations)) {
+            tagStats.value = firstRecord.tagAggregations.map(item => ({
+              name: item.tag,
+              count: item.count
+            }))
+            console.log('处理后的tagStats:', tagStats.value)
+          } else {
+            console.log('第一条记录中没有找到tagAggregations数据')
+          }
+        }
       } else {
         searchResults.value.push(...formattedResults)
       }
-      
-      // 解析和统计标签
-      parseAndCountTags(formattedResults)
       
       // 判断是否还有更多数据
       const { current, size, total } = response.data
@@ -632,7 +603,6 @@ const onRefresh = async () => {
   currentPage.value = 1
   finished.value = false
   searchResults.value = []
-  resetTagStats() // 重新统计标签
   
   // 执行搜索
   await onLoad()
