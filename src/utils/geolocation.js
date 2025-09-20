@@ -117,8 +117,8 @@ export class GeolocationService {
               doBaiduLocate();
               return;
             }
-            if (Date.now() - start > 1000) { // 最多等待 1s，避免长时间阻塞
-              console.warn('⏳ 百度API未就绪（1s超时）→ 先使用浏览器原生定位');
+            if (Date.now() - start > 2000) {
+              console.warn('⏳ 百度API未就绪（2s超时）→ 先使用浏览器原生定位');
               clearReadyTimer();
               useBrowserGeolocation();
               return;

@@ -85,6 +85,23 @@
       </div>
     </div>
 
+    <!-- 标签统计区域 -->
+    <div v-if="tagStats.length > 0" class="tags-section">
+      <div class="tags-title">热门标签</div>
+      <div class="tags-container">
+        <div
+          v-for="tag in tagStats"
+          :key="tag.name"
+          class="tag-button"
+          :class="{ 'selected': selectedTag === tag.name }"
+          @click="handleTagClick(tag.name)"
+        >
+          <span class="tag-name">{{ tag.name }}</span>
+          <span class="tag-count">{{ tag.count }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- 搜索结果 -->
     <div v-if="searchValue || selectedCategoryId" class="search-results">
       <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
@@ -156,6 +173,12 @@ const userLocation = ref({
 })
 const locationReady = ref(false) // 位置获取完成标识
 
+// 标签统计相关数据
+const tagStats = ref([])
+const allTagsMap = ref(new Map()) // 累计统计所有标签
+const selectedTag = ref('') // 当前选中的标签
+const isTagFiltering = ref(false) // 是否正在进行标签筛选
+
 // Desktop 侦测（>=1200px 视为 PC），用于切换到 PC-only 样式命名空间（ignore）
 const isDesktop = ref(false)
 const updateIsDesktop = () => {
@@ -176,6 +199,62 @@ const selectedCategoryId = ref(null)
 const activeSort = ref('0') // 默认综合排序
 
 const searchHistory = computed(() => appStore.searchHistory)
+
+// 解析和统计标签
+const parseAndCountTags = (shops) => {
+  // 只有在非标签筛选状态时才累加标签数量
+  if (!isTagFiltering.value) {
+    shops.forEach(shop => {
+      if (shop.tags && typeof shop.tags === 'string') {
+        // 按空格分割标签
+        const tags = shop.tags.split(' ').filter(tag => tag.trim() !== '')
+        
+        tags.forEach(tag => {
+          const trimmedTag = tag.trim()
+          if (trimmedTag) {
+            // 累计统计
+            const currentCount = allTagsMap.value.get(trimmedTag) || 0
+            allTagsMap.value.set(trimmedTag, currentCount + 1)
+          }
+        })
+      }
+    })
+    
+    // 更新标签统计显示（按出现次数排序，取前10个）
+    const sortedTags = Array.from(allTagsMap.value.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
+    
+    tagStats.value = sortedTags
+  }
+}
+
+// 重置标签统计
+const resetTagStats = () => {
+  allTagsMap.value.clear()
+  tagStats.value = []
+}
+
+// 处理标签点击
+const handleTagClick = (tagName) => {
+  // 设置标签筛选状态
+  isTagFiltering.value = true
+  
+  // 如果点击的是已选中的标签，则取消选中
+  if (selectedTag.value === tagName) {
+    selectedTag.value = ''
+  } else {
+    // 否则选中该标签
+    selectedTag.value = tagName
+  }
+  
+  // 重新搜索
+  searchResults.value = []
+  currentPage.value = 1
+  finished.value = false
+  onLoad()
+}
 
 // 获取用户位置
 const getUserLocation = async () => {
@@ -430,6 +509,8 @@ const handleCancel = () => {
 const handleClear = () => {
   searchValue.value = ''
   selectedCategoryId.value = null
+  selectedTag.value = ''
+  isTagFiltering.value = false
   searchResults.value = []
   finished.value = false
   currentPage.value = 1
@@ -448,7 +529,13 @@ const onSearch = async () => {
     appStore.addSearchHistory(searchValue.value)
   }
   
+  // 重置标签筛选状态（新的搜索不是标签筛选）
+  isTagFiltering.value = false
+  selectedTag.value = ''
+  
   searchResults.value = []
+  resetTagStats()
+  selectedTag.value = '' // 重置选中的标签
   currentPage.value = 1
   finished.value = false
   onLoad()
@@ -488,6 +575,10 @@ const onLoad = async () => {
       searchParams.orderBy = parseInt(activeSort.value)
     }
     
+    if (selectedTag.value) {
+      searchParams.tag = selectedTag.value
+    }
+    
     const response = await shopApi.searchShops(searchParams)
      
      if (response.data && response.data.records) {
@@ -514,6 +605,9 @@ const onLoad = async () => {
         searchResults.value.push(...formattedResults)
       }
       
+      // 解析和统计标签
+      parseAndCountTags(formattedResults)
+      
       // 判断是否还有更多数据
       const { current, size, total } = response.data
       if (formattedResults.length < pageSize || current * size >= total) {
@@ -534,10 +628,11 @@ const onLoad = async () => {
 
 // 下拉刷新
 const onRefresh = async () => {
-  // 重置分页状态
+  // 重置分页状态，但保留标签统计和选中状态
   currentPage.value = 1
   finished.value = false
   searchResults.value = []
+  resetTagStats() // 重新统计标签
   
   // 执行搜索
   await onLoad()
@@ -640,6 +735,66 @@ const clearHistory = () => {
   border-color: #FF8400;
   color: #FF8400;
   background-color: #fff2e8;
+}
+
+.tags-section {
+  background: #fff;
+  padding: 16px;
+  margin-bottom: 8px;
+  
+  .tags-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: $text-color;
+    margin-bottom: 12px;
+  }
+  
+  .tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    
+    .tag-button {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      background: #f5f5f5;
+      border-radius: 16px;
+      font-size: 14px;
+      color: $text-color-2;
+      transition: all 0.3s;
+      cursor: pointer;
+      
+      &:hover {
+        background: #e8e8e8;
+      }
+      
+      &.selected {
+        background: $primary-color;
+        color: white;
+        
+        .tag-count {
+          background: rgba(255, 255, 255, 0.3);
+          color: white;
+        }
+      }
+      
+      .tag-name {
+        margin-right: 4px;
+      }
+      
+      .tag-count {
+        background: $primary-color;
+        color: white;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+        line-height: 1.2;
+      }
+    }
+  }
 }
 .search-history {
   padding: 15px;
@@ -934,6 +1089,37 @@ const clearHistory = () => {
 .ignore .shop-item .shop-info .shop-rating .score-text { font-size: 24px; }
 .ignore .shop-item .shop-info .shop-price .distance { font-size: 24px; }
 .ignore .shop-item .shop-info .shop-rating :deep(.van-rate) { font-size: 18px; }
+
+/* PC端标签区域样式 */
+.ignore .tags-section {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  
+  .tags-title {
+    font-size: 18px;
+  }
+  
+  .tag-button {
+    font-size: 16px;
+    padding: 8px 16px;
+    
+    &.selected {
+      background: $primary-color;
+      color: white;
+      
+      .tag-count {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+      }
+    }
+    
+    .tag-count {
+      font-size: 14px;
+      padding: 3px 8px;
+    }
+  }
+}
 
 /* 移动端：确保内容区占满白底而不是露出左侧橙色背景 */
 .search-page { background: $background-color; }

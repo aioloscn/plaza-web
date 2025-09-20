@@ -35,9 +35,10 @@ export const shopApi = {
    * @param {number} pageSize 每页数量，默认10
    * @param {string} categoryId 分类ID
    * @param {string} orderBy 排序方式
+   * @param {string} tag 标签筛选
    * @returns {Promise}
    */
-  searchShops({ keyword, longitude, latitude, page = 1, pageSize = 10, categoryId, orderBy }) {
+  searchShops({ keyword, longitude, latitude, page = 1, pageSize = 10, categoryId, orderBy, tag }) {
     const searchData = {
       keyword,
       longitude,
@@ -51,6 +52,10 @@ export const shopApi = {
     
     if (orderBy !== undefined && orderBy !== null) {
       searchData.orderBy = orderBy;
+    }
+    
+    if (tag !== undefined && tag !== null && tag !== '') {
+      searchData.tag = tag;
     }
     
     return request.post('/plaza-home/shop/searchES', {
