@@ -1059,12 +1059,14 @@ const clearHistory = () => {
 .ignore .shop-item .shop-info .shop-rating .score-text { font-size: 24px; }
 .ignore .shop-item .shop-info .shop-price .distance { font-size: 24px; }
 .ignore .shop-item .shop-info .shop-rating :deep(.van-rate) { font-size: 18px; }
+.ignore .shop-item .shop-info .shop-rating :deep(.van-rate .van-rate__item:not(:last-child)) { padding-right: 0 !important; }
 
 /* PC端标签区域样式 */
 .ignore .tags-section {
   margin-bottom: 16px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 8px;
   
   .tags-title {
     font-size: 18px;
@@ -1087,6 +1089,13 @@ const clearHistory = () => {
     .tag-count {
       font-size: 14px;
       padding: 3px 8px;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
     }
   }
 }

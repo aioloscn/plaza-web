@@ -804,6 +804,7 @@ onUnmounted(() => {
   .shop-item .shop-info .shop-price .distance { font-size: 24px; }
   
   .shop-item .shop-info .shop-rating :deep(.van-rate) { font-size: 18px; }
+  .shop-item .shop-info .shop-rating :deep(.van-rate .van-rate__item:not(:last-child)) { padding-right: 0 !important; }
 
   /* 列表：5 列卡片流，上图下文（修正重复块，参数统一） */
   .shop-list {
