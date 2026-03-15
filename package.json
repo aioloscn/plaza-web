@@ -1,5 +1,5 @@
 {
-  "name": "plaza-web2.0",
+  "name": "plaza-web",
   "version": "1.0.0",
   "type": "module",
   "description": "Vue3版本的仿大众点评项目",
@@ -16,8 +16,10 @@
     "build:prod": "vite build --mode production"
   },
   "dependencies": {
+    "@vant/area-data": "^2.1.0",
     "axios": "^1.5.0",
     "dayjs": "^1.11.9",
+    "js-cookie": "^3.0.5",
     "lodash-es": "^4.17.21",
     "mysql2": "^3.15.0",
     "pinia": "^2.1.6",

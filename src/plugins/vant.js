@@ -23,7 +23,13 @@ import {
   Search,
   Tag,
   Rate,
-  Popup
+  Popup,
+  Stepper,
+  SubmitBar,
+  Badge,
+  Icon,
+  AddressList,
+  AddressEdit
 } from 'vant'
 
 // 引入样式
@@ -51,7 +57,13 @@ const components = [
   Search,
   Tag,
   Rate,
-  Popup
+  Popup,
+  Stepper,
+  SubmitBar,
+  Badge,
+  Icon,
+  AddressList,
+  AddressEdit
 ]
 
 export default {

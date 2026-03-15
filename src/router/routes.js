@@ -50,6 +50,33 @@ const routes = [
     }
   },
   {
+    path: '/checkout/:shopId',
+    name: 'Checkout',
+    component: () => import('@/views/Order/Checkout.vue'),
+    meta: {
+      title: '确认订单',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/address/list',
+    name: 'AddressList',
+    component: () => import('@/views/Address/List.vue'),
+    meta: {
+      title: '收货地址',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/address/edit',
+    name: 'AddressEdit',
+    component: () => import('@/views/Address/Edit.vue'),
+    meta: {
+      title: '编辑地址',
+      requiresAuth: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue')

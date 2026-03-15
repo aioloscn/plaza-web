@@ -1,6 +1,6 @@
-# Plaza Web 2.0 部署指南
+# Plaza Web 部署指南
 
-本文档详细说明如何在新服务器上部署 Plaza Web 2.0 项目。
+本文档详细说明如何在新服务器上部署 Plaza Web 项目。
 
 ## 环境要求
 
@@ -57,7 +57,7 @@ cd /var/www/plaza-web
 git clone <your-repository-url> .
 
 # 方式2：使用 scp 上传本地代码
-# scp -r ./plaza-web2.0/* user@server:/var/www/plaza-web/
+# scp -r ./plaza-web/* user@server:/var/www/plaza-web/
 ```
 
 #### 2.2 安装依赖并构建
@@ -106,7 +106,7 @@ server {
     
     # API 代理（如果需要）
     location /api/ {
-        proxy_pass http://live.aiolos.com:8700/;
+        proxy_pass http://www.aiolos.com:8700/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -168,7 +168,7 @@ sudo firewall-cmd --reload
 ```bash
 #!/bin/bash
 
-echo "开始部署 Plaza Web 2.0..."
+echo "开始部署 Plaza Web..."
 
 # 进入项目目录
 cd /var/www/plaza-web

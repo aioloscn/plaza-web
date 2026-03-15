@@ -19,10 +19,11 @@ export const register = (data) => {
 }
 
 // 获取用户信息
-export const getUserInfo = () => {
+export const getUserInfo = (userId) => {
   return request({
-    url: '/user/info',
-    method: 'GET'
+    url: '/badger-user-provider/user/get-user-by-id',
+    method: 'GET',
+    params: { userId }
   })
 }
 

@@ -23,7 +23,7 @@ export const shopApi = {
    * @returns {Promise}
    */
   getShopDetail(shopId) {
-    return request.get(`/shop/${shopId}`);
+    return request.get(`/plaza-home/shop/${shopId}`);
   },
 
   /**

@@ -220,8 +220,8 @@ const loadMoreShops = async () => {
     
     const response = await getShopRecommend(requestData);
     
-    if (response && response.data && response.data.records && response.data.records.length > 0) {
-      const newShops = response.data.records.map(shop => ({
+    if (response && response.records && response.records.length > 0) {
+      const newShops = response.records.map(shop => ({
         ...shop,
         // 确保字段映射正确
         name: shop.name || shop.shopName || shop.title || '未知店铺',
@@ -235,7 +235,7 @@ const loadMoreShops = async () => {
       currentPage.value = nextPage; // 更新当前页码
       
       // 根据API返回的hasNext字段判断是否还有更多数据
-      if (!response.data.hasNext) {
+      if (!response.hasNext) {
         finished.value = true;
       }
     } else {
@@ -243,33 +243,7 @@ const loadMoreShops = async () => {
     }
   } catch (error) {
     // API失败时使用模拟数据进行分页
-    const startIndex = (nextPage - 1) * 10;
-    const endIndex = startIndex + 10;
-    const totalMockData = 30; // 总共30条模拟数据
-    
-    if (startIndex < totalMockData) {
-      const mockShops = [];
-      for (let i = startIndex + 1; i <= Math.min(endIndex, totalMockData); i++) {
-        mockShops.push({
-          id: i,
-          name: `商家${i}`,
-          tags: i % 3 === 0 ? '美食·火锅' : i % 2 === 0 ? '饮品·咖啡' : '美食·快餐',
-          perCapitaPrice: 30 + (i * 5),
-          score: 4.0 + (Math.random() * 1),
-          iconUrl: '/images/shop-default.svg',
-          distanceText: `${(Math.random() * 3 + 0.5).toFixed(1)}km`
-        });
-      }
-      shopList.value.push(...mockShops);
-      currentPage.value = nextPage;
-      
-      // 检查是否还有更多数据
-      if (endIndex >= totalMockData) {
-        finished.value = true;
-      }
-    } else {
-      finished.value = true;
-    }
+    finished.value = true;
   } finally {
     loading.value = false;
   }
@@ -344,9 +318,9 @@ const loadNearbyShops = async (longitude, latitude) => {
     
     const response = await getShopRecommend(requestData);
     
-    if (response && response.data && response.data.records) {
+    if (response && response.records) {
 
-      const shops = response.data.records.map(shop => ({
+      const shops = response.records.map(shop => ({
         ...shop,
         // 确保字段映射正确
         name: shop.name || shop.shopName || shop.title || '未知店铺',
@@ -361,7 +335,7 @@ const loadNearbyShops = async (longitude, latitude) => {
 
       
       // 根据API返回的hasNext字段判断是否还有更多数据
-      if (!response.data.hasNext) {
+      if (!response.hasNext) {
         finished.value = true;
 
       }
