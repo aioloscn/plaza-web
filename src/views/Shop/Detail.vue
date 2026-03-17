@@ -188,7 +188,7 @@ const minusFromCart = (product) => {
 // 点击下单
 const onSubmitOrder = async () => {
   // 1. 先同步一下 token（防止刚登录跳回来，Pinia没更新）
-  const currentToken = cartStore.getTempId() // 临时防抖
+  // const currentToken = cartStore.getTempId() // 临时防抖
   let tokenExists = userStore.isLoggedIn;
   
   // 2. 如果没登录，强行拉取一次（可能 cookie 已经种上了，但用户信息还没拉）

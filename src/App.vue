@@ -5,7 +5,14 @@
 </template>
 
 <script setup>
-// 应用根组件
+import { onMounted } from 'vue'
+import { useCartStore } from '@/store/modules/cart'
+
+const cartStore = useCartStore()
+
+onMounted(() => {
+  cartStore.fetchCartList()
+})
 </script>
 
 <style lang="scss">

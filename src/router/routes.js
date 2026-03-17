@@ -41,6 +41,15 @@ const routes = [
     }
   },
   {
+    path: '/cart',
+    name: 'Cart',
+    component: () => import('@/views/Cart/index.vue'),
+    meta: {
+      title: '购物车',
+      requiresAuth: true
+    }
+  },
+  {
     path: '/user',
     name: 'UserProfile',
     component: () => import('@/views/User/Profile.vue'),
@@ -73,6 +82,24 @@ const routes = [
     component: () => import('@/views/Address/Edit.vue'),
     meta: {
       title: '编辑地址',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/pay/:id',
+    name: 'OrderPay',
+    component: () => import('@/views/Order/Pay.vue'),
+    meta: {
+      title: '收银台',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/order/list',
+    name: 'OrderList',
+    component: () => import('@/views/Order/List.vue'),
+    meta: {
+      title: '我的订单',
       requiresAuth: true
     }
   },

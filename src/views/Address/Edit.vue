@@ -59,7 +59,7 @@ const loadAddress = async () => {
 
 const onSave = async (content) => {
   const data = {
-    userId: userStore.userInfo.id,
+    userId: userStore.userInfo.userId,
     name: content.name,
     tel: content.tel,
     province: content.province,

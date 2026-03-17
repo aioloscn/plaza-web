@@ -2,6 +2,7 @@ import axios from 'axios'
 import { showToast } from 'vant'
 import { useUserStore } from '@/store/modules/user'
 import { getToken } from '@/utils/storage'
+import Cookies from 'js-cookie'
 
 // 创建axios实例时，加上 withCredentials: true (参考 live-web)
 const request = axios.create({
@@ -13,12 +14,18 @@ const request = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
-    // 携带 Token (如果存在)
+    // 携带 Token (如果存在，且不是占位符)
     const token = getToken()
-    if (token) {
+    if (token && token !== 'session-cookie-auth') {
       config.headers.Authorization = `Bearer ${token}`
     }
     
+    // 尝试携带 device-id (从 cookie 中获取)
+    const deviceId = Cookies.get('device-id')
+    if (deviceId) {
+      config.headers['device-id'] = deviceId
+    }
+
     return config
   },
   (error) => {
@@ -36,13 +43,15 @@ request.interceptors.response.use(
     }
     
     // 兼容标准结构
-    const { code, message, data } = response.data
+    const { code, msg, message, data } = response.data
     
     if (code === 200 || code === undefined) { // 有些接口可能没有 code
       return data || response.data
     } else {
-      showToast(message || '请求失败')
-      return Promise.reject(new Error(message || '请求失败'))
+      // 后端返回的可能是 msg，也可能是 message，或者都为空时给默认提示
+      const errorMsg = msg || message || '请求失败'
+      showToast(errorMsg)
+      return Promise.reject(new Error(errorMsg))
     }
   },
   (error) => {

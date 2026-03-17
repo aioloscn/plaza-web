@@ -4,6 +4,7 @@ import { shopApi } from './modules/shop'
 import { productApi } from './modules/product'
 import { cartApi } from './modules/cart'
 import { addressApi } from './modules/address'
+import { orderApi } from './modules/order'
 
 export {
   authApi,
@@ -12,6 +13,7 @@ export {
   productApi,
   cartApi,
   addressApi,
+  orderApi,
   searchCategory,  // 单独导出 searchCategory
   getShopRecommend  // 单独导出 getShopRecommend
 };

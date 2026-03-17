@@ -18,30 +18,45 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
-  
-  // 如果 URL 中携带了 token（例如从 badger-web 登录成功回跳）
-  if (to.query.token) {
-    userStore.setToken(to.query.token)
-    // 移除 URL 中的 token，保持地址栏干净
+  const fromLoginCenter = to.query.loginStatus === 'success' || !!to.query.token
+  if (fromLoginCenter) {
     const query = { ...to.query }
     delete query.token
-    
+    delete query.loginStatus
+    delete query.from
+    delete query.userId
     try {
       await userStore.getUserInfoAction()
-      // 登录成功后，触发购物车合并逻辑
       const cartStore = useCartStore()
       await cartStore.mergeCartAfterLogin()
     } catch (e) {
-      console.error('获取用户信息失败', e)
+      console.error('登录回跳后同步用户信息失败', e)
     }
-    
     return next({ path: to.path, query })
   }
   
   // 需要登录的页面
-  if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    next('/login')
+  if (to.meta.requiresAuth) {
+    if (userStore.isLoggedIn) {
+      next()
+    } else {
+      // 尝试获取用户信息（针对 Cookie 登录模式）
+      try {
+        await userStore.getUserInfoAction()
+        // 获取成功，继续导航
+        next()
+      } catch (e) {
+        // 获取失败，跳转登录页
+        const redirect = encodeURIComponent(to.fullPath)
+        next(`/login?redirect=${redirect}`)
+      }
+    }
   } else {
+    // 不需要登录的页面，也可以尝试获取用户信息更新状态（可选，但推荐）
+    if (!userStore.isLoggedIn && !userStore.userInfo.userId) {
+       // 异步获取，不阻塞页面跳转
+       userStore.getUserInfoAction().catch(() => {})
+    }
     next()
   }
 })

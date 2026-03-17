@@ -1,21 +1,25 @@
 import request from '../request';
 
 export const cartApi = {
-  /**
-   * 同步购物车数据到 Redis
-   * @param {Object} data 包含 userId 或 tempUserId，以及 cartItems (JSON string)
-   * @returns {Promise}
-   */
-  syncCart(data) {
-    return request.post('/plaza-shop/cart/sync', data);
+  addCart(data) {
+    return request.post('/plaza-cart/cart/add', data);
   },
-
-  /**
-   * 从 Redis 获取购物车数据
-   * @param {Object} params 包含 userId 或 tempUserId
-   * @returns {Promise}
-   */
-  getCart(params) {
-    return request.get('/plaza-shop/cart/get', { params });
+  updateQuantity(data) {
+    return request.post('/plaza-cart/cart/update', data);
+  },
+  deleteCartItem(productId) {
+    return request.post('/plaza-cart/cart/delete', null, { params: { productId } });
+  },
+  checkCartItem(data) {
+    return request.post('/plaza-cart/cart/check', data);
+  },
+  getCartList() {
+    return request.get('/plaza-cart/cart/list');
+  },
+  mergeCart() {
+    return request.post('/plaza-cart/cart/merge');
+  },
+  clearInvalid() {
+    return request.post('/plaza-cart/cart/clearInvalid');
   }
 };

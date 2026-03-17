@@ -27,12 +27,22 @@
         <van-icon name="shop-o" /> {{ shopName }}
       </div>
       <div v-for="item in cartItems" :key="item.productId" class="goods-item">
-        <van-image :src="item.image" width="60" height="60" radius="4" />
+        <van-image :src="item.image || item.productImage" width="60" height="60" radius="4" />
         <div class="goods-info">
-          <div class="name">{{ item.productName }}</div>
+          <div class="name">{{ item.productName || item.name }}</div>
           <div class="price-row">
             <span class="price">¥{{ item.price }}</span>
-            <span class="count">x{{ item.quantity }}</span>
+            <div class="stepper-wrapper">
+              <van-stepper 
+                v-model="item.quantity" 
+                min="1" 
+                max="99" 
+                integer 
+                @change="onChangeQuantity(item)"
+                class="stepper"
+              />
+              <van-icon name="delete-o" class="delete-icon" @click="onDelete(item)" />
+            </div>
           </div>
         </div>
       </div>
@@ -42,6 +52,8 @@
     <van-submit-bar
       :price="totalPrice * 100"
       button-text="提交订单"
+      :loading="loading"
+      :disabled="cartItems.length === 0"
       @submit="onSubmit"
     />
   </div>
@@ -52,8 +64,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/store/modules/cart';
 import { useUserStore } from '@/store/modules/user';
-import { addressApi } from '@/api';
-import { showToast } from 'vant';
+import { addressApi, orderApi } from '@/api';
+import { showToast, showSuccessToast, showConfirmDialog } from 'vant';
 
 const route = useRoute();
 const router = useRouter();
@@ -62,19 +74,39 @@ const userStore = useUserStore();
 
 const shopId = route.params.shopId;
 const currentAddress = ref(null);
+const loading = ref(false);
 
-const cartItems = computed(() => cartStore.getShopCartItems(shopId));
+const cartItems = computed(() => {
+    const items = cartStore.getShopCartItems(shopId);
+    return items ? items.filter(item => item.checked) : [];
+});
 const totalPrice = computed(() => Number(cartStore.getShopCartTotal(shopId)));
 const shopName = computed(() => cartItems.value.length > 0 ? cartItems.value[0].shopName : '');
 
+const onChangeQuantity = (item) => {
+    cartStore.setQuantity(item.productId, shopId, item.quantity);
+};
+
+const onDelete = (item) => {
+    showConfirmDialog({
+        title: '提示',
+        message: '确定要移除该商品吗？',
+    })
+    .then(() => {
+        cartStore.deleteItem(item.productId);
+    })
+    .catch(() => {
+        // on cancel
+    });
+};
+
 const loadAddress = async () => {
-  // 如果没有用户信息，可能还没获取完，先尝试获取
-  if (!userStore.userInfo?.id) {
+  // 如果没有用户信息，先尝试获取
+  if (!userStore.userInfo?.userId) {
       try {
           await userStore.getUserInfoAction();
       } catch (e) {
-          showToast('请先登录');
-          return;
+          // 不在这里强行 return，允许游客浏览结算页，但在提交时拦截
       }
   }
 
@@ -124,12 +156,44 @@ const onSelectAddress = () => {
     router.push('/address/list?select=true');
 };
 
-const onSubmit = () => {
+const onSubmit = async () => {
+    if (!userStore.userInfo?.userId) {
+        showToast('请先登录再下单');
+        router.push('/login');
+        return;
+    }
     if (!currentAddress.value) {
         showToast('请选择收货地址');
         return;
     }
-    showToast('下单功能开发中...');
+
+    loading.value = true;
+    try {
+        const req = {
+            addressId: currentAddress.value.id,
+            shopId: Number(shopId),
+            note: '',
+            payType: 1 // 默认支付宝
+        };
+        const orderId = await orderApi.submit(req);
+        showSuccessToast('下单成功');
+        
+        // 清除已选地址缓存
+        sessionStorage.removeItem('selected_address_id');
+        
+        // 刷新购物车（实际上后端已经清除了，前端重新拉取一下）
+        cartStore.fetchCartList();
+        
+        // 跳转到支付页
+        setTimeout(() => {
+            router.replace(`/pay/${orderId}`);
+        }, 1500);
+    } catch (error) {
+        console.error(error);
+        showToast(error.msg || '下单失败');
+    } finally {
+        loading.value = false;
+    }
 };
 
 onMounted(() => {
@@ -191,7 +255,15 @@ onMounted(() => {
             .price-row {
                 display: flex; justify-content: space-between;
                 .price { color: #f44; font-weight: bold; }
-                .count { color: #999; }
+                .stepper-wrapper {
+                    display: flex;
+                    align-items: center;
+                    .delete-icon {
+                        margin-left: 10px;
+                        font-size: 20px;
+                        color: #999;
+                    }
+                }
             }
         }
     }
