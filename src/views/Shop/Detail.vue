@@ -78,7 +78,7 @@
       @submit="onSubmitOrder"
       :disabled="!cartStore.getShopCartCount(shopId)"
     >
-      <div class="cart-icon-wrapper">
+      <div class="cart-icon-wrapper" @click="$router.push('/cart')">
         <van-badge :content="cartStore.getShopCartCount(shopId) || ''" max="99">
           <van-icon name="shopping-cart-o" size="24" />
         </van-badge>
@@ -411,6 +411,12 @@ onUnmounted(() => {
       border-color: $primary-color;
     }
   }
+}
+
+.cart-icon-wrapper {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
 /* 桌面端样式（忽略 px-to-viewport 转换） */

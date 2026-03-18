@@ -84,6 +84,16 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
+  // 设置选中状态
+  const checkCartItem = async (data) => {
+    try {
+      await cartApi.checkCartItem(data)
+    } catch (error) {
+      console.error('Check cart item failed', error)
+      throw error
+    }
+  }
+
   // 切换选中状态
   const toggleChecked = async (productId, shopId) => {
     const item = items.value.find(item => String(item.productId) === String(productId) && String(item.shopId) === String(shopId))
@@ -141,6 +151,7 @@ export const useCartStore = defineStore('cart', () => {
     minusQuantity,
     setQuantity,
     deleteItem,
+    checkCartItem,
     toggleChecked,
     getShopCartItems,
     getShopCartCount,

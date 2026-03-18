@@ -51,17 +51,27 @@ import { showToast, showSuccessToast } from 'vant';
 const route = useRoute();
 const router = useRouter();
 const orderId = route.params.id;
+const paySn = route.query.sn;
 
 const orderInfo = ref({});
 const payType = ref('1');
 const loading = ref(false);
 
 const loadOrder = async () => {
+  loading.value = true;
   try {
-    const data = await orderApi.get(orderId);
-    orderInfo.value = data;
+    let data;
+    if (paySn) {
+      data = await orderApi.getPayInfo(paySn);
+    } else {
+      data = await orderApi.get(orderId);
+    }
+    // If data is wrapped
+    orderInfo.value = data.data || data;
   } catch (error) {
     showToast('获取订单信息失败');
+  } finally {
+    loading.value = false;
   }
 };
 

@@ -39,14 +39,14 @@
       <!-- 按店铺分组显示 -->
       <div v-for="(group, shopId) in groupedCartItems" :key="shopId" class="shop-group">
         <div class="shop-header">
-          <van-checkbox v-model="group.checked" @click="toggleShopCheck(shopId, group.checked)">
-            <span class="shop-name">{{ group.shopName }}</span>
-          </van-checkbox>
+          <van-checkbox v-model="group.checked" shape="round" checked-color="#ff5000" @click="toggleShopCheck(shopId, group.checked)" />
+          <span class="shop-name" @click="$router.push(`/shop/${shopId}`)">{{ group.shopName }}</span>
+          <van-icon name="arrow" class="shop-arrow" @click="$router.push(`/shop/${shopId}`)" />
         </div>
         
         <van-swipe-cell v-for="item in group.items" :key="item.productId" class="goods-item">
           <div class="goods-card">
-            <van-checkbox v-model="item.checked" @click="handleCheckItem(item)" />
+            <van-checkbox v-model="item.checked" shape="round" checked-color="#ff5000" @click="handleCheckItem(item)" />
             <van-image :src="item.productImage" class="goods-img" fit="cover" />
             <div class="goods-info">
               <div class="goods-title">{{ item.productName }}</div>
@@ -79,7 +79,7 @@
       button-text="提交订单"
       @submit="onSubmit"
     >
-      <van-checkbox v-model="allChecked" @click="toggleAllCheck">全选</van-checkbox>
+      <van-checkbox v-model="allChecked" shape="round" checked-color="#ff5000" @click="toggleAllCheck">全选</van-checkbox>
     </van-submit-bar>
 
     <van-tabbar v-model="active" route fixed placeholder>
@@ -144,24 +144,45 @@ const allChecked = computed({
 })
 
 // 初始化
-onMounted(async () => {
+const initCart = async () => {
   if (isLoggedIn.value) {
     await cartStore.fetchCartList()
+    if (cartItems.value.length > 0) {
+      const hasChecked = cartItems.value.some(item => item.checked)
+      if (!hasChecked) {
+        // 默认勾选第一个（最后加入的）
+        try {
+          const firstItem = cartItems.value[0]
+          await cartStore.checkCartItem({
+            productIds: [firstItem.productId],
+            checked: 1
+          })
+          await cartStore.fetchCartList()
+        } catch (e) {
+          console.error('默认勾选失败', e)
+        }
+      }
+    }
   }
+}
+
+onMounted(() => {
+  initCart()
 })
 
 // 监听登录状态变化
-watch(isLoggedIn, async (newVal) => {
+watch(isLoggedIn, (newVal) => {
   if (newVal) {
-    await cartStore.fetchCartList()
+    initCart()
   }
 })
 
 // 修改数量
 const handleQuantityChange = async (value, item) => {
   try {
-    await cartStore.updateQuantity(item.productId, value)
+    await cartStore.setQuantity(item.productId, item.shopId, value)
   } catch (error) {
+    console.error('修改数量失败', error)
     showToast('修改数量失败')
   }
 }
@@ -218,10 +239,11 @@ const handleDelete = (item) => {
     message: '确定要删除这个商品吗？',
   }).then(async () => {
     try {
-      await cartStore.deleteCartItem(item.productId)
+      await cartStore.deleteItem(item.productId)
       showToast('已删除')
       await cartStore.fetchCartList()
     } catch (error) {
+      console.error('删除失败', error)
       showToast('删除失败')
     }
   })
@@ -235,15 +257,15 @@ const onSubmit = () => {
     return
   }
   
-  // 检查是否跨店铺结算（假设一次只能结算一个店铺）
+  // 检查是否跨店铺结算
   const shopIds = new Set(checkedItems.map(item => item.shopId))
-  if (shopIds.size > 1) {
-    showToast('暂不支持跨店铺结算，请分批下单')
-    return
+  if (shopIds.size === 1) {
+    const shopId = [...shopIds][0]
+    router.push(`/checkout/${shopId}`)
+  } else {
+    // 多店铺结算
+    router.push('/checkout')
   }
-  
-  const shopId = [...shopIds][0]
-  router.push(`/checkout/${shopId}`)
 }
 </script>
 
@@ -280,10 +302,21 @@ const onSubmit = () => {
   .shop-header {
     padding: 12px 16px;
     border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    align-items: center;
     
     .shop-name {
       font-weight: bold;
       margin-left: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .shop-arrow {
+      margin-left: 4px;
+      color: #999;
+      font-size: 14px;
+      cursor: pointer;
     }
   }
 }

@@ -21,12 +21,12 @@
       <van-icon name="arrow" />
     </div>
 
-    <!-- Shop & Items -->
-    <div class="shop-group">
+    <!-- Shop & Items Groups -->
+    <div v-for="(group, sId) in groupedCartItems" :key="sId" class="shop-group">
       <div class="shop-name">
-        <van-icon name="shop-o" /> {{ shopName }}
+        <van-icon name="shop-o" /> {{ group.shopName }}
       </div>
-      <div v-for="item in cartItems" :key="item.productId" class="goods-item">
+      <div v-for="item in group.items" :key="item.productId" class="goods-item">
         <van-image :src="item.image || item.productImage" width="60" height="60" radius="4" />
         <div class="goods-info">
           <div class="name">{{ item.productName || item.name }}</div>
@@ -38,7 +38,7 @@
                 min="1" 
                 max="99" 
                 integer 
-                @change="onChangeQuantity(item)"
+                @change="onChangeQuantity(item, sId)"
                 class="stepper"
               />
               <van-icon name="delete-o" class="delete-icon" @click="onDelete(item)" />
@@ -46,6 +46,16 @@
           </div>
         </div>
       </div>
+      <!-- Shop Note -->
+      <van-field
+        v-model="shopNotes[sId]"
+        rows="1"
+        autosize
+        label="备注"
+        type="textarea"
+        placeholder="请输入备注"
+        class="shop-note"
+      />
     </div>
 
     <!-- Submit Bar -->
@@ -53,14 +63,14 @@
       :price="totalPrice * 100"
       button-text="提交订单"
       :loading="loading"
-      :disabled="cartItems.length === 0"
+      :disabled="!hasItems"
       @submit="onSubmit"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/store/modules/cart';
 import { useUserStore } from '@/store/modules/user';
@@ -72,45 +82,69 @@ const router = useRouter();
 const cartStore = useCartStore();
 const userStore = useUserStore();
 
-const shopId = route.params.shopId;
+const shopIdParam = route.params.shopId;
 const currentAddress = ref(null);
 const loading = ref(false);
+const shopNotes = reactive({});
 
-const cartItems = computed(() => {
-    const items = cartStore.getShopCartItems(shopId);
-    return items ? items.filter(item => item.checked) : [];
+// Computed: Group cart items by shopId
+const groupedCartItems = computed(() => {
+  const allItems = cartStore.items || [];
+  const checkedItems = allItems.filter(item => item.checked);
+  
+  // If shopId param exists, filter by it
+  const targetItems = shopIdParam 
+    ? checkedItems.filter(item => String(item.shopId) === String(shopIdParam))
+    : checkedItems;
+
+  const groups = {};
+  targetItems.forEach(item => {
+    const sId = item.shopId;
+    if (!groups[sId]) {
+      groups[sId] = {
+        shopName: item.shopName,
+        items: []
+      };
+    }
+    groups[sId].items.push(item);
+  });
+  return groups;
 });
-const totalPrice = computed(() => Number(cartStore.getShopCartTotal(shopId)));
-const shopName = computed(() => cartItems.value.length > 0 ? cartItems.value[0].shopName : '');
 
-const onChangeQuantity = (item) => {
-    cartStore.setQuantity(item.productId, shopId, item.quantity);
+const hasItems = computed(() => Object.keys(groupedCartItems.value).length > 0);
+
+const totalPrice = computed(() => {
+  let total = 0;
+  Object.values(groupedCartItems.value).forEach(group => {
+    group.items.forEach(item => {
+      total += item.price * item.quantity;
+    });
+  });
+  return total;
+});
+
+const onChangeQuantity = (item, sId) => {
+  cartStore.setQuantity(item.productId, sId, item.quantity);
 };
 
 const onDelete = (item) => {
-    showConfirmDialog({
-        title: '提示',
-        message: '确定要移除该商品吗？',
-    })
-    .then(() => {
-        cartStore.deleteItem(item.productId);
-    })
-    .catch(() => {
-        // on cancel
-    });
+  showConfirmDialog({
+    title: '提示',
+    message: '确定要移除该商品吗？',
+  })
+  .then(() => {
+    cartStore.deleteItem(item.productId);
+  })
+  .catch(() => {});
 };
 
 const loadAddress = async () => {
-  // 如果没有用户信息，先尝试获取
   if (!userStore.userInfo?.userId) {
       try {
           await userStore.getUserInfoAction();
-      } catch (e) {
-          // 不在这里强行 return，允许游客浏览结算页，但在提交时拦截
-      }
+      } catch (e) {}
   }
 
-  // Check if address selected from list
   const selectedId = sessionStorage.getItem('selected_address_id');
   if (selectedId) {
       try {
@@ -123,12 +157,8 @@ const loadAddress = async () => {
       } catch (e) {}
   }
   
-  // Default load default address
   try {
-      // 这里的 addressApi.list() 不需要传 userId，后端自己取
       const data = await addressApi.list();
-      
-      // 兼容直接返回数组或者 { data: [] }
       let list = [];
       if (Array.isArray(data)) {
           list = data;
@@ -171,22 +201,20 @@ const onSubmit = async () => {
     try {
         const req = {
             addressId: currentAddress.value.id,
-            shopId: Number(shopId),
-            note: '',
-            payType: 1 // 默认支付宝
+            shopId: shopIdParam ? Number(shopIdParam) : null,
+            shopNotes: shopNotes,
+            payType: 1
         };
-        const orderId = await orderApi.submit(req);
+        const res = await orderApi.submit(req);
+        // The backend now returns a string (parentOrderSn) or response object containing it
+        const paySn = (res && res.data) ? res.data : res; 
+        
         showSuccessToast('下单成功');
-        
-        // 清除已选地址缓存
         sessionStorage.removeItem('selected_address_id');
-        
-        // 刷新购物车（实际上后端已经清除了，前端重新拉取一下）
         cartStore.fetchCartList();
         
-        // 跳转到支付页
         setTimeout(() => {
-            router.replace(`/pay/${orderId}`);
+            router.replace(`/pay/0?sn=${paySn}`); // Use '0' as dummy ID, pass SN in query
         }, 1500);
     } catch (error) {
         console.error(error);
@@ -266,6 +294,13 @@ onMounted(() => {
                 }
             }
         }
+    }
+
+    .shop-note {
+      padding: 0;
+      margin-top: 10px;
+      border-top: 1px dashed #eee;
+      padding-top: 10px;
     }
 }
 </style>

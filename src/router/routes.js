@@ -59,7 +59,7 @@ const routes = [
     }
   },
   {
-    path: '/checkout/:shopId',
+    path: '/checkout/:shopId?',
     name: 'Checkout',
     component: () => import('@/views/Order/Checkout.vue'),
     meta: {

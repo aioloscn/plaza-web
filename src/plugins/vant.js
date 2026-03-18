@@ -29,7 +29,11 @@ import {
   Badge,
   Icon,
   AddressList,
-  AddressEdit
+  AddressEdit,
+  Checkbox,
+  CheckboxGroup,
+  SwipeCell,
+  Empty
 } from 'vant'
 
 // 引入样式
@@ -63,7 +67,11 @@ const components = [
   Badge,
   Icon,
   AddressList,
-  AddressEdit
+  AddressEdit,
+  Checkbox,
+  CheckboxGroup,
+  SwipeCell,
+  Empty
 ]
 
 export default {

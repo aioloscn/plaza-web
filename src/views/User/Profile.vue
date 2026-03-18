@@ -22,23 +22,23 @@
     <div class="order-section">
       <van-cell title="我的订单" is-link value="全部订单" to="/order/list" />
       <div class="order-types">
-        <div class="type-item">
+        <div class="type-item" @click="toOrderList(0)">
           <van-icon name="pending-payment" size="24" />
           <span>待付款</span>
         </div>
-        <div class="type-item">
+        <div class="type-item" @click="toOrderList(1)">
           <van-icon name="logistics" size="24" />
           <span>待发货</span>
         </div>
-        <div class="type-item">
+        <div class="type-item" @click="toOrderList(2)">
           <van-icon name="tosend" size="24" />
           <span>待收货</span>
         </div>
-        <div class="type-item">
+        <div class="type-item" @click="toOrderList(3)">
           <van-icon name="comment-o" size="24" />
           <span>待评价</span>
         </div>
-        <div class="type-item">
+        <div class="type-item" @click="toOrderList(-1)">
           <van-icon name="after-sale" size="24" />
           <span>退款/售后</span>
         </div>
@@ -98,6 +98,13 @@ const handleLogout = () => {
       showToast('已退出登录')
       router.replace('/login')
     }
+  })
+}
+
+const toOrderList = (status) => {
+  router.push({
+    path: '/order/list',
+    query: { status }
   })
 }
 

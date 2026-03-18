@@ -25,10 +25,16 @@
         <div v-else class="order-card" v-for="order in orders" :key="order.id" @click="toDetail(order.id)">
           <div class="card-header">
             <div class="shop-name" @click.stop="toShop(order.shopId)">
-              <van-icon name="shop-o" /> {{ order.shopName }}
-              <van-icon name="arrow" />
+          <van-icon name="shop-o" />
+          <span>{{ order.shopName }}</span>
+          <van-icon v-if="order.shopName !== '多店合并订单'" name="arrow" />
+        </div>
+            <div class="status-wrap">
+              <span v-if="order.status === 0 && order.remainTime > 0" class="static-time">
+                {{ formatRemainTime(order.remainTime) }}
+              </span>
+              <span class="status">{{ order.statusDesc }}</span>
             </div>
-            <span class="status">{{ order.statusDesc }}</span>
           </div>
           
           <div class="card-body">
@@ -50,7 +56,7 @@
               共{{ getTotalCount(order) }}件商品 合计: <span class="amount">¥{{ order.totalAmount }}</span>
             </div>
             <div class="actions">
-              <van-button v-if="order.status === 0" size="small" round plain type="warning" @click.stop="toPay(order.id)">去支付</van-button>
+              <van-button v-if="order.status === 0" size="small" round plain type="warning" @click.stop="toPay(order)">去支付</van-button>
               <van-button v-if="order.status === 2" size="small" round plain type="warning">确认收货</van-button>
               <van-button v-if="order.status === 3" size="small" round plain>评价</van-button>
             </div>
@@ -62,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { orderApi } from '@/api';
 import { showToast } from 'vant';
@@ -74,6 +80,26 @@ const activeTab = ref(-1);
 const orders = ref([]);
 const loading = ref(false);
 const refreshing = ref(false);
+let timer = null;
+
+const startTimer = () => {
+  if (timer) clearInterval(timer);
+  timer = setInterval(() => {
+    let needRefresh = false;
+    orders.value.forEach(order => {
+      if (order.status === 0 && order.remainTime && order.remainTime > 0) {
+        order.remainTime -= 1000;
+        if (order.remainTime <= 0) {
+          order.remainTime = 0;
+          needRefresh = true;
+        }
+      }
+    });
+    if (needRefresh) {
+      loadOrders();
+    }
+  }, 1000);
+};
 
 const loadOrders = async () => {
   loading.value = true;
@@ -81,6 +107,7 @@ const loadOrders = async () => {
     const status = activeTab.value === -1 ? null : activeTab.value;
     const data = await orderApi.list(status);
     orders.value = data || [];
+    startTimer(); // 每次加载完订单重新启动定时器
   } catch (error) {
     console.error(error);
     showToast('加载订单失败');
@@ -102,16 +129,30 @@ const getTotalCount = (order) => {
   return order.items ? order.items.reduce((sum, item) => sum + item.productQuantity, 0) : 0;
 };
 
+const formatRemainTime = (milliseconds) => {
+  const ms = Number(milliseconds);
+  if (isNaN(ms) || ms <= 0) return '';
+  
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  
+  return `${minutes.toString().padStart(2, '0')}分${seconds.toString().padStart(2, '0')}秒`;
+};
+
 const toDetail = (id) => {
   // router.push(`/order/detail/${id}`);
 };
 
 const toShop = (shopId) => {
-  router.push(`/shop/${shopId}`);
+  if (shopId) {
+    router.push(`/shop/${shopId}`)
+  }
 };
 
-const toPay = (id) => {
-  router.push(`/pay/${id}`);
+const toPay = (order) => {
+  // 跳转到收银台，使用 parentOrderSn 作为支付单号
+  router.push(`/pay/0?sn=${order.orderSn}`);
 };
 
 onMounted(() => {
@@ -120,6 +161,10 @@ onMounted(() => {
     activeTab.value = Number(route.query.status);
   }
   loadOrders();
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
 });
 </script>
 
@@ -153,9 +198,20 @@ onMounted(() => {
       gap: 4px;
     }
     
-    .status {
-      color: #ff9000;
-      font-size: 14px;
+    .status-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      
+      .static-time {
+        color: #ff9000;
+        font-size: 12px;
+      }
+      
+      .status {
+        color: #ff9000;
+        font-size: 14px;
+      }
     }
   }
   
