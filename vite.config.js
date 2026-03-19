@@ -42,9 +42,10 @@ export default defineConfig({
     allowedHosts: ['www.aiolos.com', '.aiolos.com'], // 允许的域名
     proxy: {
       '/api': {
-        target: 'http://www.aiolos.com:8700',
+        target: 'http://live.aiolos.com:8700',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        cookieDomainRewrite: "localhost"
       }
     }
   },

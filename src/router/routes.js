@@ -86,6 +86,15 @@ const routes = [
     }
   },
   {
+    path: '/pay/success',
+    name: 'PaySuccess',
+    component: () => import('@/views/Order/PaySuccess.vue'),
+    meta: {
+      title: '支付结果',
+      requiresAuth: true
+    }
+  },
+  {
     path: '/pay/:id',
     name: 'OrderPay',
     component: () => import('@/views/Order/Pay.vue'),

@@ -76,20 +76,32 @@ const loadOrder = async () => {
 };
 
 const handlePay = async () => {
+  const targetSn = orderInfo.value.parentOrderSn || orderInfo.value.orderSn;
+  if (!targetSn) {
+    showToast('订单信息有误');
+    return;
+  }
   loading.value = true;
   try {
-    // 模拟支付过程
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 实际项目中这里应该调用支付接口获取支付参数，然后调起支付
-    // 这里直接模拟支付成功
-    showSuccessToast('支付成功');
-    
-    setTimeout(() => {
-      router.replace('/order/list?status=1'); // 跳转到待发货列表
-    }, 1500);
+    const res = await orderApi.pay(targetSn, payType.value);
+    // 后端返回的是一段支付宝的 form 表单 HTML，我们需要将其挂载到页面上并自动提交
+    const htmlStr = typeof res === 'string' ? res : (res && res.data && typeof res.data === 'string' ? res.data : '');
+    if (htmlStr) {
+      const div = document.createElement('div');
+      div.innerHTML = htmlStr;
+      document.body.appendChild(div);
+      const form = div.querySelector('form');
+      if (form) {
+        form.submit();
+      } else {
+        showToast('支付表单解析失败');
+      }
+    } else {
+      showToast('支付接口返回异常');
+    }
   } catch (error) {
-    showToast('支付失败');
+    console.error(error);
+    showToast('支付失败，请稍后重试');
   } finally {
     loading.value = false;
   }
