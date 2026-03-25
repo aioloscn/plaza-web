@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login, logout, getUserInfo, getSmsCode, getCurrentUser } from '@/api/modules/auth'
-import { setToken, getToken, removeToken } from '@/utils/storage'
+import { setToken, getToken, removeToken, setRefreshToken, getRefreshToken, removeRefreshToken } from '@/utils/storage'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
   const token = ref(getToken() || '')
+  const refreshToken = ref(getRefreshToken() || '')
   const userInfo = ref({})
   const isLoggedIn = computed(() => {
     // 优先看 token
@@ -31,10 +32,15 @@ export const useUserStore = defineStore('user', () => {
       // 兼容多种后端返回格式
       const data = response.data || response
       
-      // 场景1：返回 { token: 'xxx', user: {...} }
+      // 场景1：返回 { token: 'xxx', user: {...} } 或直接返回带有 token 字段的 UserVO 对象
       if (data && data.token) {
         token.value = data.token
-        userInfo.value = data.user
+        if (data.refreshToken) {
+          refreshToken.value = data.refreshToken
+          setRefreshToken(data.refreshToken)
+        }
+        // 如果后端直接把 token 塞在了 UserVO 里（像我们刚才改造的），那么 data 本身就是 userInfo
+        userInfo.value = data.user || data
         setToken(data.token)
       } 
       // 场景2：直接返回 UserVO 对象 (Cookie/Session 模式)
@@ -58,12 +64,15 @@ export const useUserStore = defineStore('user', () => {
   // 登出
   const logoutAction = async () => {
     try {
-      await logout()
+      // 无论后端登出接口是否成功，前端必须先清理状态，防止拦截器死循环
       token.value = ''
+      refreshToken.value = ''
       userInfo.value = {}
       removeToken()
+      removeRefreshToken()
+      await logout()
     } catch (error) {
-      console.error('登出失败:', error)
+      console.error('登出请求失败:', error)
     }
   }
 

@@ -24,5 +24,14 @@ export const productApi = {
    */
   getProductDetail(id) {
     return request.get(`/plaza-shop/product/${id}`);
+  },
+
+  /**
+   * 获取店铺的秒杀商品列表
+   * @param {number|string} shopId 店铺ID
+   * @returns {Promise}
+   */
+  getSeckillActivity(shopId) {
+    return request.post(`/plaza-shop/seckill/get-seckill-activity?shopId=${shopId}`);
   }
 };

@@ -68,6 +68,15 @@ const routes = [
     }
   },
   {
+    path: '/seckill-checkout/:shopId?',
+    name: 'SeckillCheckout',
+    component: () => import('@/views/Order/SeckillCheckout.vue'),
+    meta: {
+      title: '确认秒杀订单',
+      requiresAuth: true
+    }
+  },
+  {
     path: '/address/list',
     name: 'AddressList',
     component: () => import('@/views/Address/List.vue'),
@@ -90,8 +99,7 @@ const routes = [
     name: 'PaySuccess',
     component: () => import('@/views/Order/PaySuccess.vue'),
     meta: {
-      title: '支付结果',
-      requiresAuth: true
+      title: '支付结果'
     }
   },
   {

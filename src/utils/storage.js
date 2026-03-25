@@ -1,59 +1,75 @@
-import Cookies from 'js-cookie'
-
 const TOKEN_KEY = 'plaza_token'
+const REFRESH_TOKEN_KEY = 'plaza_refresh_token'
 const USER_KEY = 'plaza_user'
+
+const consumeAuthFromUrl = () => {
+  if (typeof window === 'undefined') {
+    return {
+      token: '',
+      refreshToken: ''
+    }
+  }
+
+  const url = new URL(window.location.href)
+  const token = (url.searchParams.get('token') || '').trim()
+  const refreshToken = (url.searchParams.get('refreshToken') || '').trim()
+
+  if (!token && !refreshToken) {
+    return {
+      token: '',
+      refreshToken: ''
+    }
+  }
+
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token)
+  }
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+  }
+
+  url.searchParams.delete('token')
+  url.searchParams.delete('refreshToken')
+
+  const nextUrl = `${url.pathname}${url.search}${url.hash}`
+  window.history.replaceState({}, document.title, nextUrl)
+
+  return {
+    token,
+    refreshToken
+  }
+}
 
 // Token相关
 export const getToken = () => {
-  // 1. 尝试从 cookie 获取 (解决跨域登录的 token 共享问题)
-  // live-web 中种的 cookie 叫 ztscrip，而截图里看到的是 vs-token。我们都尝试取一下
-  let token = Cookies.get('vs-token') || Cookies.get('token') || Cookies.get('ztscrip')
-
-  // 2. 如果 Cookie 中没有，再尝试从 localStorage 获取
-  if (!token) {
-    token = localStorage.getItem(TOKEN_KEY)
-  } else {
-    // 如果 Cookie 中有，同步更新到 localStorage
-    localStorage.setItem(TOKEN_KEY, token)
+  const urlAuth = consumeAuthFromUrl()
+  let token = localStorage.getItem(TOKEN_KEY)
+  if (urlAuth.token && urlAuth.token !== token) {
+    token = urlAuth.token
   }
-  
-  // 3. 尝试从 URL 中获取 (解决 cookie domain 没生效的情况，这是最可靠的兜底)
-  if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // 如果 URL 中直接带有 token
-    const tokenFromUrl = urlParams.get('token');
-    if (tokenFromUrl && tokenFromUrl !== token) {
-       token = tokenFromUrl;
-       localStorage.setItem(TOKEN_KEY, token);
-       Cookies.set('vs-token', token, { path: '/', domain: '.aiolos.com' });
-       window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    // 如果是 badger-web 回跳，通常只带有 loginStatus=success
-    const loginStatus = urlParams.get('loginStatus');
-    if (loginStatus === 'success') {
-       // 再读一次，确保没漏
-       const cToken = Cookies.get('vs-token') || Cookies.get('token') || Cookies.get('ztscrip');
-       if(cToken) {
-          token = cToken;
-          localStorage.setItem(TOKEN_KEY, token);
-       }
-    }
-  }
-
   return token || ''
 }
 
 export const setToken = (token) => {
   localStorage.setItem(TOKEN_KEY, token)
-  // 为了跨域共享，设置 domain
-  Cookies.set('vs-token', token, { path: '/', domain: '.aiolos.com' })
 }
 
 export const removeToken = () => {
   localStorage.removeItem(TOKEN_KEY)
-  Cookies.remove('vs-token', { path: '/', domain: '.aiolos.com' })
+}
+
+export const getRefreshToken = () => {
+  const urlAuth = consumeAuthFromUrl()
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
+  return urlAuth.refreshToken || refreshToken || ''
+}
+
+export const setRefreshToken = (token) => {
+  localStorage.setItem(REFRESH_TOKEN_KEY, token)
+}
+
+export const removeRefreshToken = () => {
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
 }
 
 // 用户信息相关

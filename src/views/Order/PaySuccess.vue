@@ -10,14 +10,14 @@
       <van-icon name="checked" class="success-icon" />
       <div class="title">支付成功</div>
       
-      <div class="info-list" v-if="orderInfo">
+      <div class="info-list">
         <div class="info-item">
           <span class="label">支付单号</span>
           <span class="value">{{ out_trade_no }}</span>
         </div>
         <div class="info-item">
           <span class="label">支付金额</span>
-          <span class="value price">¥{{ orderInfo.payAmount || '0.00' }}</span>
+          <span class="value price">¥{{ payAmount }}</span>
         </div>
       </div>
       
@@ -33,22 +33,28 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { orderApi } from '@/api';
-import { showToast } from 'vant';
+import { getToken } from '@/utils/storage';
 
 const route = useRoute();
 const router = useRouter();
 
 // Alipay callback query parameters
-const out_trade_no = route.query.out_trade_no;
+const out_trade_no = route.query.out_trade_no || route.query.outTradeNo || '';
+const amountFromQuery = route.query.total_amount || route.query.totalAmount || '0.00';
+const payAmount = ref(amountFromQuery);
 
 const orderInfo = ref(null);
 
 const loadOrderInfo = async () => {
   if (!out_trade_no) return;
+  if (!getToken()) return;
   try {
     // We can fetch order info by out_trade_no (which is paySn)
     const res = await orderApi.getPayInfo(out_trade_no);
-    orderInfo.value = res.data || res;
+    orderInfo.value = res.data || res || {};
+    if (orderInfo.value.payAmount !== undefined && orderInfo.value.payAmount !== null) {
+      payAmount.value = orderInfo.value.payAmount;
+    }
   } catch (error) {
     console.error('Failed to get order info', error);
   }

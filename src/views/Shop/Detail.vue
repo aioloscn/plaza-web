@@ -33,7 +33,12 @@
 
     <!-- 商品列表 -->
     <div class="product-list">
-      <div class="section-title">推荐商品</div>
+      <van-tabs v-if="seckillList.length > 0" v-model:active="activeTab" color="#FF8400" sticky :offset-top="46">
+        <van-tab title="推荐商品" name="recommend"></van-tab>
+        <van-tab title="秒杀商品" name="seckill"></van-tab>
+      </van-tabs>
+      <div v-else class="section-title">推荐商品</div>
+
       <van-list
         v-model:loading="loading"
         :finished="finished"
@@ -41,8 +46,8 @@
         @load="onLoad"
       >
         <div
-          v-for="(product, index) in productList"
-          :key="index"
+          v-for="(product, index) in currentProductList"
+          :key="product.id || index"
           class="product-item"
         >
           <div class="product-image">
@@ -55,17 +60,36 @@
               <span class="current-price">¥{{ product.price }}</span>
               <span v-if="product.originalPrice" class="original-price">¥{{ product.originalPrice }}</span>
             </div>
+            <div v-if="activeTab === 'seckill' && product.stock !== undefined" class="product-stock">
+              库存: {{ product.stock }}
+            </div>
+            <div v-if="activeTab === 'seckill' && product.endTime" class="product-countdown">
+              距结束: <van-count-down :time="getRemainingTime(product.endTime)" format="DD天 HH时 mm分 ss秒" />
+            </div>
           </div>
           <div class="product-action">
-            <van-stepper
-              :model-value="getProductCartQuantity(product.id)"
-              min="0"
-              theme="round"
-              button-size="22"
-              disable-input
-              @plus="addToCart(product)"
-              @minus="minusFromCart(product)"
-            />
+            <template v-if="activeTab === 'seckill'">
+              <van-button 
+                size="small" 
+                type="danger" 
+                class="seckill-btn"
+                @click="onSeckillBuy(product)"
+                :disabled="product.stock <= 0"
+              >
+                {{ product.stock <= 0 ? '已售罄' : '抢购' }}
+              </van-button>
+            </template>
+            <template v-else>
+              <van-stepper
+                :model-value="getProductCartQuantity(product.id)"
+                min="0"
+                theme="round"
+                button-size="22"
+                disable-input
+                @plus="addToCart(product)"
+                @minus="minusFromCart(product)"
+              />
+            </template>
           </div>
         </div>
       </van-list>
@@ -89,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { shopApi, productApi } from '@/api'
@@ -101,6 +125,11 @@ const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const shopId = route.params.id
+const loginCenterUrl = import.meta.env.VITE_LOGIN_CENTER_URL || 'http://www.aiolos.com:5502/index.html'
+
+const redirectToLoginCenter = () => {
+  window.location.href = `${loginCenterUrl}?redirect=${encodeURIComponent(window.location.href)}`
+}
 
 // 获取商品在购物车中的数量
 const getProductCartQuantity = (productId) => {
@@ -121,6 +150,12 @@ const loading = ref(false)
 const finished = ref(false)
 const shopInfo = ref({})
 const productList = ref([])
+const seckillList = ref([])
+const activeTab = ref('recommend')
+
+const currentProductList = computed(() => {
+  return activeTab.value === 'seckill' ? seckillList.value : productList.value
+})
 
 // 获取商家信息
 const getShopInfo = async () => {
@@ -142,6 +177,63 @@ const getShopInfo = async () => {
     console.error('获取商家信息失败', error)
     showToast('获取商家信息失败')
   }
+}
+
+// 获取秒杀商品列表
+const getSeckillList = async () => {
+  try {
+    const response = await productApi.getSeckillActivity(shopId)
+    const data = response.data || response
+    if (data && Array.isArray(data)) {
+      seckillList.value = data.map(item => ({
+        id: item.productId || item.id,
+        activityId: item.activityId || item.id,
+        name: item.name,
+        description: item.description || '限时秒杀，抢完即止',
+        image: item.imageUrl || '/images/product-default.svg',
+        price: item.seckillPrice !== undefined ? item.seckillPrice : item.price,
+        originalPrice: item.originalPrice || item.price,
+        stock: item.stock !== undefined ? item.stock : 0,
+        endTime: item.endTime
+      }))
+    }
+  } catch (error) {
+    console.error('获取秒杀商品列表失败', error)
+  }
+}
+
+// 计算倒计时时间（毫秒）
+const getRemainingTime = (endTime) => {
+  if (!endTime) return 0
+  // 兼容 iOS 的日期解析
+  const timeStr = String(endTime).replace(/-/g, '/')
+  const end = new Date(timeStr).getTime()
+  const now = new Date().getTime()
+  return Math.max(end - now, 0)
+}
+
+// 抢购秒杀商品
+const onSeckillBuy = async (product) => {
+  let tokenExists = userStore.isLoggedIn;
+  if (!tokenExists) {
+      try {
+          await userStore.getUserInfoAction();
+          tokenExists = userStore.isLoggedIn;
+      } catch (e) {
+          console.error('抢购校验未登录, 详细错误:', e);
+      }
+  }
+
+  if (tokenExists) {
+    // 跳转到专门的秒杀结算页
+    router.push(`/seckill-checkout/${shopId}?productId=${product.id}&activityId=${product.activityId}`)
+    return
+  }
+
+  showToast('请先登录，正在跳转...')
+  setTimeout(() => {
+    redirectToLoginCenter()
+  }, 1000)
 }
 
 // 加载商品列表
@@ -219,8 +311,7 @@ const onSubmitOrder = async () => {
   // 4. 跳转
   showToast('请先登录，正在跳转...')
   setTimeout(() => {
-    // badger-web 登录页逻辑，模仿 live-web 的做法，携带 redirect
-    window.location.href = `http://www.aiolos.com:5502/index.html?redirect=${encodeURIComponent(window.location.href)}`
+    redirectToLoginCenter()
   }, 1000)
 }
 
@@ -257,6 +348,7 @@ onMounted(async () => {
   }
 
   getShopInfo()
+  getSeckillList()
   onLoad()
 })
 
@@ -403,12 +495,39 @@ onUnmounted(() => {
         text-decoration: line-through;
       }
     }
+
+    .product-stock {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .product-countdown {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #e02020;
+      display: flex;
+      align-items: center;
+
+      :deep(.van-count-down) {
+        color: #e02020;
+        font-size: 12px;
+        margin-left: 4px;
+      }
+    }
   }
   
   .product-action {
-    .van-button {
+    .van-button:not(.seckill-btn) {
       background-color: $primary-color;
       border-color: $primary-color;
+    }
+    
+    .seckill-btn {
+      width: 70px; /* 增加宽度 */
+      height: 30px;
+      border-radius: 6px; /* 带一点点圆角的长方形 */
+      font-weight: bold;
     }
   }
 }

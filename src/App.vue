@@ -5,14 +5,29 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useCartStore } from '@/store/modules/cart'
 
 const cartStore = useCartStore()
+const route = useRoute()
 
 onMounted(() => {
-  cartStore.fetchCartList()
+  // 如果当前是秒杀页面，不查询购物车
+  if (!window.location.pathname.includes('/seckill-checkout')) {
+    cartStore.fetchCartList()
+  }
 })
+
+// 当路由发生变化时，如果从秒杀页面回到普通页面，可以再查一次
+watch(
+  () => route.name,
+  (newName, oldName) => {
+    if (oldName === 'SeckillCheckout' && newName !== 'SeckillCheckout') {
+      cartStore.fetchCartList()
+    }
+  }
+)
 </script>
 
 <style lang="scss">

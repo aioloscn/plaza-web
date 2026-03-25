@@ -7,12 +7,12 @@
           round
           width="60"
           height="60"
-          :src="userInfo.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'"
+          :src="userInfo?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'"
           class="avatar"
         />
         <div class="info-content">
-          <div class="nickname">{{ isLoggedIn ? (userInfo.nickName || '用户' + userInfo.phone?.slice(-4)) : '点击登录/注册' }}</div>
-          <div class="phone" v-if="isLoggedIn">{{ userInfo.phone }}</div>
+          <div class="nickname">{{ isLoggedIn ? (userInfo?.nickName || (userInfo?.phone ? '用户' + userInfo.phone.slice(-4) : '加载中...')) : '点击登录/注册' }}</div>
+          <div class="phone" v-if="isLoggedIn">{{ userInfo?.phone }}</div>
         </div>
         <van-icon name="arrow" class="arrow" v-if="!isLoggedIn" />
       </div>

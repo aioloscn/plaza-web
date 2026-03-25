@@ -33,7 +33,10 @@ import {
   Checkbox,
   CheckboxGroup,
   SwipeCell,
-  Empty
+  Empty,
+  Tab,
+  Tabs,
+  CountDown
 } from 'vant'
 
 // 引入样式
@@ -71,7 +74,10 @@ const components = [
   Checkbox,
   CheckboxGroup,
   SwipeCell,
-  Empty
+  Empty,
+  Tab,
+  Tabs,
+  CountDown
 ]
 
 export default {
