@@ -1,6 +1,33 @@
 const TOKEN_KEY = 'plaza_token'
 const REFRESH_TOKEN_KEY = 'plaza_refresh_token'
 const USER_KEY = 'plaza_user'
+const GLOBAL_LOGOUT_COOKIE_KEY = 'aiolos_sso_logout_at'
+const GLOBAL_LOGOUT_SEEN_KEY = 'plaza_seen_logout_at'
+
+const readCookieValue = (name) => {
+  if (typeof document === 'undefined') return ''
+  const cookies = document.cookie ? document.cookie.split('; ') : []
+  for (const item of cookies) {
+    const idx = item.indexOf('=')
+    const key = idx > -1 ? item.slice(0, idx) : item
+    if (key === name) {
+      return idx > -1 ? decodeURIComponent(item.slice(idx + 1)) : ''
+    }
+  }
+  return ''
+}
+
+const consumeGlobalLogoutMarker = () => {
+  if (typeof window === 'undefined') return
+  const marker = parseInt(readCookieValue(GLOBAL_LOGOUT_COOKIE_KEY) || '0', 10)
+  if (!marker) return
+  const seen = parseInt(localStorage.getItem(GLOBAL_LOGOUT_SEEN_KEY) || '0', 10)
+  if (seen >= marker) return
+  localStorage.setItem(GLOBAL_LOGOUT_SEEN_KEY, String(marker))
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
+  localStorage.removeItem(USER_KEY)
+}
 
 const consumeAuthFromUrl = () => {
   if (typeof window === 'undefined') {
@@ -42,6 +69,7 @@ const consumeAuthFromUrl = () => {
 
 // Token相关
 export const getToken = () => {
+  consumeGlobalLogoutMarker()
   const urlAuth = consumeAuthFromUrl()
   let token = localStorage.getItem(TOKEN_KEY)
   if (urlAuth.token && urlAuth.token !== token) {
@@ -59,6 +87,7 @@ export const removeToken = () => {
 }
 
 export const getRefreshToken = () => {
+  consumeGlobalLogoutMarker()
   const urlAuth = consumeAuthFromUrl()
   const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
   return urlAuth.refreshToken || refreshToken || ''

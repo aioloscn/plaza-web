@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { login, logout, getUserInfo, getSmsCode, getCurrentUser, changePasswordBySms } from '@/api/modules/auth'
 import { setToken, getToken, removeToken, setRefreshToken, getRefreshToken, removeRefreshToken } from '@/utils/storage'
-import { buildOAuthLogoutUrl } from '@/utils/oauth2'
+import { buildOAuthLogoutUrl, publishGlobalLogoutMarker } from '@/utils/oauth2'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
@@ -69,6 +69,7 @@ export const useUserStore = defineStore('user', () => {
 
   const oauthLogoutAction = async (redirectPath = '/') => {
     await logoutAction()
+    publishGlobalLogoutMarker()
     window.location.href = buildOAuthLogoutUrl(redirectPath)
   }
 
