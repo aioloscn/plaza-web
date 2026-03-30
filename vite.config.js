@@ -3,6 +3,13 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import pxToViewport from 'postcss-px-to-viewport'
 
+const defaultAuthSdkPath = resolve(__dirname, 'src/shared/auth-sdk')
+
+const sharedAuthSdkPath = process.env.AUTH_SDK_PATH && process.env.AUTH_SDK_PATH.trim()
+  ? resolve(process.env.AUTH_SDK_PATH.trim())
+  : defaultAuthSdkPath
+const fsAllowPaths = Array.from(new Set([resolve(__dirname), sharedAuthSdkPath]))
+
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -13,7 +20,8 @@ export default defineConfig({
       '@assets': resolve(__dirname, 'src/assets'),
       '@utils': resolve(__dirname, 'src/utils'),
       '@api': resolve(__dirname, 'src/api'),
-      '@store': resolve(__dirname, 'src/store')
+      '@store': resolve(__dirname, 'src/store'),
+      '@auth-sdk': sharedAuthSdkPath
     }
   },
   css: {
@@ -37,9 +45,11 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0',
     port: 3000,
     open: true,
-    allowedHosts: ['www.aiolos.com', '.aiolos.com'], // 允许的域名
+    allowedHosts: true,
+    fs: { allow: fsAllowPaths },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8700',
