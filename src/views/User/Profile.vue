@@ -48,6 +48,7 @@
     <!-- 常用功能 -->
     <div class="menu-group">
       <van-cell title="收货地址" icon="location-o" is-link to="/address" />
+      <van-cell title="修改密码" icon="shield-o" is-link to="/user/change-password" />
       <van-cell title="我的收藏" icon="star-o" is-link />
       <van-cell title="优惠券" icon="coupon-o" is-link />
       <van-cell title="联系客服" icon="service-o" is-link />
@@ -83,7 +84,7 @@ const userInfo = computed(() => userStore.userInfo)
 
 const handleUserInfoClick = () => {
   if (!isLoggedIn.value) {
-    router.push('/login')
+    router.push('/login?oauth=1&redirect=%2Fuser')
   }
 }
 
@@ -94,9 +95,8 @@ const handleLogout = () => {
     showCancelButton: true,
   }).then(async (action) => {
     if (action === 'confirm') {
-      await userStore.logoutAction()
-      showToast('已退出登录')
-      router.replace('/login')
+      showToast('正在退出登录')
+      await userStore.oauthLogoutAction('/')
     }
   })
 }

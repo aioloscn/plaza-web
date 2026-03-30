@@ -2,8 +2,8 @@ import axios from 'axios'
 import { showToast } from 'vant'
 import { useUserStore } from '@/store/modules/user'
 import { getToken, getRefreshToken, setToken, setRefreshToken } from '@/utils/storage'
+import { refreshOAuthToken } from '@/utils/oauth2'
 import Cookies from 'js-cookie'
-import router from '@/router'
 
 // 创建axios实例时，加上 withCredentials: true (参考 live-web)
 const request = axios.create({
@@ -20,9 +20,9 @@ let requestsQueue = []
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
-    // 携带 Token (如果存在，且不是占位符)
+    // 携带 Token
     const token = getToken()
-    if (token && token !== 'session-cookie-auth') {
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
     
@@ -63,7 +63,7 @@ request.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest.url.includes('/user/logout') && !originalRequest.url.includes('badger-user-provider/user/refresh')) {
+    if (error.response?.status === 401 && !originalRequest.url.includes('/user/logout') && !originalRequest.url.includes('badger-user-provider/user/refresh') && !originalRequest.url.includes('/oauth2/token')) {
       const currentToken = getToken()
       const currentRefreshToken = getRefreshToken()
       const userStore = useUserStore()
@@ -73,32 +73,33 @@ request.interceptors.response.use(
         if (!isRefreshing) {
           isRefreshing = true
           try {
-            // 发起刷新请求，注意要用一个新的 axios 实例或者直接写 fetch 避免被再次拦截
-            const refreshResponse = await axios.post(
-              `${import.meta.env.VITE_API_BASE_URL || '/api'}/badger-user-provider/user/refresh`, 
-              `refreshToken=${currentRefreshToken}`,
-              { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-            )
-            
-            const newTokens = refreshResponse.data.data || refreshResponse.data
-            if (newTokens && newTokens.accessToken) {
-              // 更新本地存储和 Store
-              setToken(newTokens.accessToken)
-              setRefreshToken(newTokens.refreshToken)
-              userStore.token = newTokens.accessToken
+            let newTokens = {}
+            try {
+              newTokens = await refreshOAuthToken(currentRefreshToken)
+            } catch (oauthRefreshError) {
+              const refreshResponse = await axios.post(
+                `${import.meta.env.VITE_API_BASE_URL || '/api'}/badger-user-provider/user/refresh`,
+                `refreshToken=${currentRefreshToken}`,
+                { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+              )
+              newTokens = refreshResponse.data.data || refreshResponse.data || {}
+            }
+            const accessToken = newTokens.access_token || newTokens.accessToken || ''
+            const refreshToken = newTokens.refresh_token || newTokens.refreshToken || currentRefreshToken
+            if (accessToken) {
+              setToken(accessToken)
+              setRefreshToken(refreshToken)
+              userStore.token = accessToken
               
-              // 重新执行队列中的请求
-              requestsQueue.forEach(cb => cb(newTokens.accessToken))
+              requestsQueue.forEach(cb => cb(accessToken))
               requestsQueue = []
               
-              // 重试当前失败的请求
-              originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`
               return request(originalRequest)
             } else {
               throw new Error('Invalid refresh response')
             }
           } catch (refreshError) {
-            // 刷新失败，强制退出
             requestsQueue = []
             userStore.logoutAction()
             showToast('登录已过期，请重新登录')
@@ -107,7 +108,6 @@ request.interceptors.response.use(
             isRefreshing = false
           }
         } else {
-          // 如果正在刷新中，将请求加入队列，等待刷新完成后重试
           return new Promise(resolve => {
             requestsQueue.push((newToken) => {
               originalRequest.headers.Authorization = `Bearer ${newToken}`
@@ -116,13 +116,10 @@ request.interceptors.response.use(
           })
         }
       } else {
-        // 2. 没有 Refresh Token，或者是未登录状态访问
         if (currentToken) {
-          // 有 token 但没 refresh token（异常情况），强制登出
           userStore.logoutAction()
           showToast('登录状态异常，请重新登录')
         }
-        // 如果根本没有 token，说明是游客，不弹窗，直接拒绝，交由业务方处理
       }
     } else if (error.response?.status === 401 && error.config.url.includes('/user/logout')) {
       // 如果就是 logout 接口报 401，强制清空本地状态

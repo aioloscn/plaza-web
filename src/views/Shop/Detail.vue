@@ -119,16 +119,16 @@ import { showToast } from 'vant'
 import { shopApi, productApi } from '@/api'
 import { useCartStore } from '@/store/modules/cart'
 import { useUserStore } from '@/store/modules/user'
+import { startOAuthLogin } from '@/utils/oauth2'
 
 const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const shopId = route.params.id
-const loginCenterUrl = import.meta.env.VITE_LOGIN_CENTER_URL || 'http://www.aiolos.com:5502/index.html'
 
-const redirectToLoginCenter = () => {
-  window.location.href = `${loginCenterUrl}?redirect=${encodeURIComponent(window.location.href)}`
+const redirectToLoginCenter = async () => {
+  await startOAuthLogin(route.fullPath)
 }
 
 // 获取商品在购物车中的数量
@@ -232,7 +232,7 @@ const onSeckillBuy = async (product) => {
 
   showToast('请先登录，正在跳转...')
   setTimeout(() => {
-    redirectToLoginCenter()
+    redirectToLoginCenter().catch(() => {})
   }, 1000)
 }
 
@@ -311,7 +311,7 @@ const onSubmitOrder = async () => {
   // 4. 跳转
   showToast('请先登录，正在跳转...')
   setTimeout(() => {
-    redirectToLoginCenter()
+    redirectToLoginCenter().catch(() => {})
   }, 1000)
 }
 

@@ -11,7 +11,7 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/Auth/Login.vue'),
+    component: () => import('@/views/NotFound.vue'),
     meta: {
       title: '登录'
     }
@@ -55,6 +55,15 @@ const routes = [
     component: () => import('@/views/User/Profile.vue'),
     meta: {
       title: '个人中心',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/user/change-password',
+    name: 'ChangePassword',
+    component: () => import('@/views/User/ChangePassword.vue'),
+    meta: {
+      title: '修改密码',
       requiresAuth: true
     }
   },

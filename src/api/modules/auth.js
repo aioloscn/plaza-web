@@ -62,6 +62,14 @@ export const logout = () => {
   })
 }
 
+export const changePasswordBySms = (data) => {
+  return request({
+    url: '/badger-user-provider/user/change-password-by-sms',
+    method: 'POST',
+    data
+  })
+}
+
 // 导出 authApi 对象
 export const authApi = {
   login,
@@ -69,5 +77,6 @@ export const authApi = {
   getUserInfo,
   getCurrentUser,
   getSmsCode,
-  logout
+  logout,
+  changePasswordBySms
 }

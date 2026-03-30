@@ -1,73 +1,72 @@
 <template>
-  <!-- 桌面端通过 ignore 禁用 px-to-viewport -->
-  <div class="login-page" :class="{ ignore: isDesktop }">
-    <!-- 头部导航 -->
+  <div class="change-password-page" :class="{ ignore: isDesktop }">
     <van-nav-bar
-      title="登录"
+      title="修改密码"
       left-arrow
       @click-left="$router.go(-1)"
       :style="{ backgroundColor: '#FF8400', color: '#fff' }"
     />
 
-    <!-- 登录表单 -->
-    <div class="login-form">
-      <van-form @submit="handleLogin">
+    <div class="change-password-form">
+      <van-form @submit="handleSubmit">
         <van-cell-group class="custom-group">
           <van-field
-            v-model="loginForm.phone"
+            v-model="form.phone"
             name="phone"
             label="手机号"
-            label-width="60px"
-            placeholder="请输入手机号"
-            :rules="[{ required: true, message: '请输入手机号' }]"
-            type="tel"
-            maxlength="11"
+            label-width="70px"
+            readonly
           />
           <van-field
-            v-model="loginForm.code"
-            center
-            clearable
+            v-model="form.code"
+            name="code"
             label="验证码"
-            label-width="60px"
+            label-width="70px"
             placeholder="请输入短信验证码"
             :rules="[{ required: true, message: '请输入验证码' }]"
           >
             <template #button>
-              <van-button 
-                size="small" 
+              <van-button
+                size="small"
                 color="#FF8400"
                 plain
                 style="border-radius: 4px; padding: 0 8px; min-width: 80px;"
-                :disabled="sms.sending || sms.countdown > 0" 
+                :disabled="sms.sending || sms.countdown > 0 || !form.phone"
                 @click="sendSmsCode"
               >
                 {{ sms.countdown > 0 ? sms.countdown + 's' : '获取验证码' }}
               </van-button>
             </template>
           </van-field>
+          <van-field
+            v-model="form.newPassword"
+            type="password"
+            name="newPassword"
+            label="新密码"
+            label-width="70px"
+            placeholder="请输入新密码"
+            :rules="[{ required: true, message: '请输入新密码' }]"
+          />
+          <van-field
+            v-model="form.confirmPassword"
+            type="password"
+            name="confirmPassword"
+            label="确认密码"
+            label-width="70px"
+            placeholder="请再次输入新密码"
+            :rules="[{ required: true, message: '请再次输入新密码' }]"
+          />
         </van-cell-group>
 
-        <div class="login-actions">
+        <div class="change-password-actions">
           <van-button
             round
             block
             color="#FF8400"
             native-type="submit"
             :loading="loading"
-            class="login-btn"
           >
-            登录
-          </van-button>
-
-          <van-button
-            round
-            block
-            plain
-            color="#FF8400"
-            class="register-btn"
-            @click="$router.push('/register')"
-          >
-            注册
+            确认修改
           </van-button>
         </div>
       </van-form>
@@ -76,19 +75,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { showToast } from 'vant'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/modules/user'
-import { useCartStore } from '@/store/modules/cart'
 
 const router = useRouter()
-const route = useRoute()
 const userStore = useUserStore()
-const cartStore = useCartStore()
 const loading = ref(false)
 
-// 桌面端检测（>=1200px）
 const isDesktop = ref(typeof window !== 'undefined' ? window.innerWidth >= 1200 : false)
 const updateIsDesktop = () => {
   if (typeof window !== 'undefined') {
@@ -96,36 +91,28 @@ const updateIsDesktop = () => {
   }
 }
 
-// 登录表单数据
-const loginForm = reactive({
+const form = reactive({
   phone: '',
-  code: ''
+  code: '',
+  newPassword: '',
+  confirmPassword: ''
 })
 
-// 短信验证码状态
 const sms = reactive({
   sending: false,
   countdown: 0,
   timer: null
 })
 
-// 发送短信验证码
 const sendSmsCode = async () => {
-  if (!loginForm.phone) {
-    showToast('请输入手机号')
+  if (!form.phone) {
+    showToast('手机号缺失，请重新登录')
     return
   }
-  if (!/^1[3-9]\d{9}$/.test(loginForm.phone)) {
-    showToast('手机号格式不正确')
-    return
-  }
-
   sms.sending = true
   try {
-    await userStore.sendSmsCodeAction(loginForm.phone)
+    await userStore.sendSmsCodeAction(form.phone)
     showToast('验证码已发送，请注意查收')
-    
-    // 开始倒计时
     sms.countdown = 60
     sms.timer = setInterval(() => {
       sms.countdown--
@@ -140,52 +127,53 @@ const sendSmsCode = async () => {
   }
 }
 
-// 处理登录
-const handleLogin = async () => {
-  if (!loginForm.phone || !loginForm.code) {
+const handleSubmit = async () => {
+  if (!form.code || !form.newPassword || !form.confirmPassword) {
     showToast('请填写完整信息')
     return
   }
-  if (!/^1[3-9]\d{9}$/.test(loginForm.phone)) {
-    showToast('手机号格式不正确')
+  if (form.newPassword.length < 8) {
+    showToast('新密码至少8位')
     return
   }
-
+  if (form.newPassword !== form.confirmPassword) {
+    showToast('两次输入密码不一致')
+    return
+  }
   loading.value = true
   try {
-    await userStore.loginAction(loginForm)
-    await cartStore.mergeCartAfterLogin()
-    showToast('登录成功')
-    
-    // 登录成功后返回上一页或首页
-    const redirect = route.query.redirect
-    if (redirect) {
-      // 解码可能被编码的 redirect URL
-      const decodedRedirect = decodeURIComponent(redirect)
-      // 如果是完整的 URL（包含 http/https），则进行 window.location 跳转
-      if (decodedRedirect.startsWith('http')) {
-        window.location.href = decodedRedirect
-      } else {
-        router.replace(decodedRedirect)
-      }
-    } else {
-      router.replace('/')
-    }
+    await userStore.changePasswordBySmsAction({
+      code: form.code,
+      newPassword: form.newPassword
+    })
+    showToast('密码修改成功，请重新登录')
+    await userStore.logoutAction()
+    router.replace('/login')
   } catch (error) {
-    showToast(error.message || '登录失败')
+    showToast(error.message || '修改密码失败')
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   updateIsDesktop()
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', updateIsDesktop)
   }
+  try {
+    await userStore.getUserInfoAction()
+    form.phone = userStore.userInfo?.phone || ''
+  } catch (error) {
+    showToast('请先登录')
+    router.replace('/login')
+  }
 })
 
 onUnmounted(() => {
+  if (sms.timer) {
+    clearInterval(sms.timer)
+  }
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', updateIsDesktop)
   }
@@ -193,12 +181,12 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.login-page {
+.change-password-page {
   min-height: 100vh;
   background-color: $background-color;
 }
 
-.login-form {
+.change-password-form {
   padding: 40px 20px;
 }
 
@@ -208,24 +196,12 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.login-actions {
+.change-password-actions {
   margin-top: 30px;
-  
-  .login-btn {
-    margin-bottom: 15px;
-    background-color: $primary-color;
-    border-color: $primary-color;
-  }
-  
-  .register-btn {
-    color: $primary-color;
-    border-color: $primary-color;
-  }
 }
 
-/* 桌面端样式 */
 .ignore {
-  .login-page {
+  .change-password-page {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -233,11 +209,7 @@ onUnmounted(() => {
     margin: 0 auto;
   }
 
-  .van-nav-bar {
-    padding: 0 16px;
-  }
-
-  .login-form {
+  .change-password-form {
     display: flex;
     justify-content: center;
     align-items: center;

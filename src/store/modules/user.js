@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { login, logout, getUserInfo, getSmsCode, getCurrentUser } from '@/api/modules/auth'
+import { login, logout, getUserInfo, getSmsCode, getCurrentUser, changePasswordBySms } from '@/api/modules/auth'
 import { setToken, getToken, removeToken, setRefreshToken, getRefreshToken, removeRefreshToken } from '@/utils/storage'
+import { buildOAuthLogoutUrl } from '@/utils/oauth2'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
@@ -9,19 +10,11 @@ export const useUserStore = defineStore('user', () => {
   const refreshToken = ref(getRefreshToken() || '')
   const userInfo = ref({})
   const isLoggedIn = computed(() => {
-    // 优先看 token
     const currentToken = getToken()
     if (currentToken && currentToken !== token.value) {
       token.value = currentToken
     }
-    
-    // 如果 token 有值，肯定是登录了
-    if (!!token.value) return true;
-    
-    // 如果 token 没值，但是 userInfo 有 userId，说明是通过 cookie 登录的
-    if (userInfo.value && userInfo.value.userId) return true;
-    
-    return false
+    return !!token.value
   })
 
   // 登录
@@ -43,11 +36,9 @@ export const useUserStore = defineStore('user', () => {
         userInfo.value = data.user || data
         setToken(data.token)
       } 
-      // 场景2：直接返回 UserVO 对象 (Cookie/Session 模式)
+      // 场景2：直接返回 UserVO 对象
       else if (data && data.userId) {
         userInfo.value = data
-        token.value = 'session-cookie-auth' // 设置占位 token
-        // setToken('session-cookie-auth') // 不再需要写入 localStorage，依赖 getUserInfoAction 恢复状态
       }
       // 场景3：只返回 code=200，没有数据
       else {
@@ -76,6 +67,11 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const oauthLogoutAction = async (redirectPath = '/') => {
+    await logoutAction()
+    window.location.href = buildOAuthLogoutUrl(redirectPath)
+  }
+
   // 获取用户信息
   const getUserInfoAction = async (userId) => {
     try {
@@ -93,12 +89,6 @@ export const useUserStore = defineStore('user', () => {
       
       userInfo.value = userData
       
-      // 如果获取用户信息成功，但本地没有 token (可能是 HttpOnly Cookie 模式)
-      // 我们手动设置一个占位 token，确保 isLoggedIn 为 true
-      if (!token.value && userData.userId) {
-        token.value = 'session-cookie-auth'
-      }
-      
       return userData
     } catch (error) {
       return Promise.reject(error)
@@ -115,13 +105,24 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const changePasswordBySmsAction = async (form) => {
+    try {
+      const response = await changePasswordBySms(form)
+      return Promise.resolve(response)
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+
   return {
     token,
     userInfo,
     isLoggedIn,
     loginAction,
     logoutAction,
+    oauthLogoutAction,
     getUserInfoAction,
-    sendSmsCodeAction
+    sendSmsCodeAction,
+    changePasswordBySmsAction
   }
 })
