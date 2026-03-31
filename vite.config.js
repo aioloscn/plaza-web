@@ -5,11 +5,6 @@ import pxToViewport from 'postcss-px-to-viewport'
 
 const defaultAuthSdkPath = resolve(__dirname, 'src/shared/auth-sdk')
 
-const sharedAuthSdkPath = process.env.AUTH_SDK_PATH && process.env.AUTH_SDK_PATH.trim()
-  ? resolve(process.env.AUTH_SDK_PATH.trim())
-  : defaultAuthSdkPath
-const fsAllowPaths = Array.from(new Set([resolve(__dirname), sharedAuthSdkPath]))
-
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -21,7 +16,7 @@ export default defineConfig({
       '@utils': resolve(__dirname, 'src/utils'),
       '@api': resolve(__dirname, 'src/api'),
       '@store': resolve(__dirname, 'src/store'),
-      '@auth-sdk': sharedAuthSdkPath
+      '@auth-sdk': defaultAuthSdkPath
     }
   },
   css: {
@@ -49,7 +44,7 @@ export default defineConfig({
     port: 3000,
     open: true,
     allowedHosts: true,
-    fs: { allow: fsAllowPaths },
+    fs: { allow: [resolve(__dirname)] },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8700',

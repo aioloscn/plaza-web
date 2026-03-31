@@ -1,4 +1,5 @@
 const trimTrailingSlash = (value) => (value || '').replace(/\/+$/, '')
+export const AUTH_SDK_VERSION = '2026-03-31.1'
 
 const normalizePath = (value, fallback = '/') => {
   const path = (value || '').trim()
