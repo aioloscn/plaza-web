@@ -42,7 +42,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-    open: true,
+    // 使用自定义本地域名打开开发站点，便于联调 OAuth/Cookie 等依赖域名的场景
+    open: 'http://plaza.aiolos.com',
     allowedHosts: true,
     fs: { allow: [resolve(__dirname)] },
     proxy: {
@@ -50,7 +51,7 @@ export default defineConfig({
         target: 'http://127.0.0.1:8700',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-        cookieDomainRewrite: "localhost"
+        cookieDomainRewrite: 'plaza.aiolos.com'
       }
     }
   },

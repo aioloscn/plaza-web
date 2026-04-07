@@ -69,7 +69,7 @@ const loadOrder = async () => {
     // If data is wrapped
     orderInfo.value = data.data || data;
   } catch (error) {
-    showToast('获取订单信息失败');
+    showToast(error.msg || error.message || '获取订单信息失败');
   } finally {
     loading.value = false;
   }
@@ -101,7 +101,8 @@ const handlePay = async () => {
     }
   } catch (error) {
     console.error(error);
-    showToast('支付失败，请稍后重试');
+    // 优先展示后端返回的业务 msg，避免被固定文案覆盖。
+    showToast(error.msg || error.message || '支付失败，请稍后重试');
   } finally {
     loading.value = false;
   }

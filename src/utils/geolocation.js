@@ -11,7 +11,8 @@ export class GeolocationService {
       console.log('🗺️ 开始获取地理位置...');
       
       // 检查是否在预览环境中
-      const isPreview = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const previewHosts = ['localhost', '127.0.0.1', 'plaza.aiolos.com'];
+      const isPreview = previewHosts.includes(window.location.hostname);
       if (isPreview) {
         console.log('🔧 检测到预览环境，请确保已允许位置权限');
       }

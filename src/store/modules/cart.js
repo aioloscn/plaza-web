@@ -38,17 +38,17 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   // 减少商品数量
-  const minusQuantity = async (productId, shopId) => {
-    const item = items.value.find(item => String(item.productId) === String(productId) && String(item.shopId) === String(shopId))
+  const minusQuantity = async (cartItemId) => {
+    const item = items.value.find(item => String(item.id) === String(cartItemId))
     if (item) {
       try {
         if (item.quantity > 1) {
           await cartApi.updateQuantity({
-            productId: productId,
+            cartItemId: item.id,
             count: item.quantity - 1
           })
         } else {
-          await cartApi.deleteCartItem(productId)
+          await cartApi.deleteCartItem(item.id)
         }
         await fetchCartList()
       } catch (error) {
@@ -58,15 +58,15 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   // 设置商品数量
-  const setQuantity = async (productId, shopId, count) => {
+  const setQuantity = async (cartItemId, count) => {
     try {
       if (count > 0) {
         await cartApi.updateQuantity({
-          productId: productId,
+          cartItemId,
           count: count
         })
       } else {
-        await cartApi.deleteCartItem(productId)
+        await cartApi.deleteCartItem(cartItemId)
       }
       await fetchCartList()
     } catch (error) {
@@ -75,9 +75,9 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   // 删除商品
-  const deleteItem = async (productId) => {
+  const deleteItem = async (cartItemId) => {
     try {
-      await cartApi.deleteCartItem(productId)
+      await cartApi.deleteCartItem(cartItemId)
       await fetchCartList()
     } catch (error) {
       console.error('Delete item failed', error)
@@ -95,12 +95,12 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   // 切换选中状态
-  const toggleChecked = async (productId, shopId) => {
-    const item = items.value.find(item => String(item.productId) === String(productId) && String(item.shopId) === String(shopId))
+  const toggleChecked = async (cartItemId) => {
+    const item = items.value.find(item => String(item.id) === String(cartItemId))
     if (item) {
       try {
         await cartApi.checkCartItem({
-          productIds: [productId],
+          cartItemIds: [item.id],
           checked: item.checked ? 0 : 1
         })
         await fetchCartList()

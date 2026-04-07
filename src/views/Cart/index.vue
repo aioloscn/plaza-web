@@ -44,7 +44,7 @@
           <van-icon name="arrow" class="shop-arrow" @click="$router.push(`/shop/${shopId}`)" />
         </div>
         
-        <van-swipe-cell v-for="item in group.items" :key="item.productId" class="goods-item">
+        <van-swipe-cell v-for="item in group.items" :key="item.id" class="goods-item">
           <div class="goods-card">
             <van-checkbox v-model="item.checked" shape="round" checked-color="#ff5000" @click="handleCheckItem(item)" />
             <van-image :src="item.productImage" class="goods-img" fit="cover" />
@@ -154,7 +154,7 @@ const initCart = async () => {
         try {
           const firstItem = cartItems.value[0]
           await cartStore.checkCartItem({
-            productIds: [firstItem.productId],
+            cartItemIds: [firstItem.id],
             checked: 1
           })
           await cartStore.fetchCartList()
@@ -180,7 +180,7 @@ watch(isLoggedIn, (newVal) => {
 // 修改数量
 const handleQuantityChange = async (value, item) => {
   try {
-    await cartStore.setQuantity(item.productId, item.shopId, value)
+    await cartStore.setQuantity(item.id, value)
   } catch (error) {
     console.error('修改数量失败', error)
     showToast('修改数量失败')
@@ -191,7 +191,7 @@ const handleQuantityChange = async (value, item) => {
 const handleCheckItem = async (item) => {
   try {
     await cartStore.checkCartItem({
-      productIds: [item.productId],
+      cartItemIds: [item.id],
       checked: item.checked ? 1 : 0
     })
   } catch (error) {
@@ -204,10 +204,10 @@ const toggleShopCheck = async (shopId, checked) => {
   const group = groupedCartItems.value[shopId]
   if (!group) return
   
-  const productIds = group.items.map(item => item.productId)
+  const cartItemIds = group.items.map(item => item.id)
   try {
     await cartStore.checkCartItem({
-      productIds,
+      cartItemIds,
       checked: checked ? 1 : 0
     })
     // 本地乐观更新，等待接口刷新
@@ -220,10 +220,10 @@ const toggleShopCheck = async (shopId, checked) => {
 // 购物车全选
 const toggleAllCheck = async () => {
   const targetChecked = !allChecked.value
-  const productIds = cartItems.value.map(item => item.productId)
+  const cartItemIds = cartItems.value.map(item => item.id)
   try {
     await cartStore.checkCartItem({
-      productIds,
+      cartItemIds,
       checked: targetChecked ? 1 : 0
     })
     await cartStore.fetchCartList()
@@ -239,7 +239,7 @@ const handleDelete = (item) => {
     message: '确定要删除这个商品吗？',
   }).then(async () => {
     try {
-      await cartStore.deleteItem(item.productId)
+      await cartStore.deleteItem(item.id)
       showToast('已删除')
       await cartStore.fetchCartList()
     } catch (error) {

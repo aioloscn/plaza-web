@@ -56,7 +56,29 @@
               共{{ getTotalCount(order) }}件商品 合计: <span class="amount">¥{{ order.totalAmount }}</span>
             </div>
             <div class="actions">
-              <van-button v-if="order.status === 0" size="small" round plain type="warning" @click.stop="toPay(order)">去支付</van-button>
+              <van-button
+                v-if="order.status === 0"
+                size="small"
+                round
+                plain
+                type="warning"
+                :loading="isOrderActionPending(order, 'pay')"
+                :disabled="isOrderActionPending(order, 'pay')"
+                @click.stop="toPay(order)"
+              >
+                去支付
+              </van-button>
+              <van-button
+                v-if="order.status === 1"
+                size="small"
+                round
+                plain
+                :loading="isOrderActionPending(order, 'refund')"
+                :disabled="isOrderActionPending(order, 'refund')"
+                @click.stop="applyRefund(order)"
+              >
+                申请退款
+              </van-button>
               <van-button v-if="order.status === 2" size="small" round plain type="warning">确认收货</van-button>
               <van-button v-if="order.status === 3" size="small" round plain>评价</van-button>
             </div>
@@ -71,7 +93,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { orderApi } from '@/api';
-import { showToast } from 'vant';
+import { showConfirmDialog, showSuccessToast, showToast } from 'vant';
 
 const router = useRouter();
 const route = useRoute();
@@ -80,7 +102,23 @@ const activeTab = ref(-1);
 const orders = ref([]);
 const loading = ref(false);
 const refreshing = ref(false);
+const pendingActions = ref({});
 let timer = null;
+
+const buildOrderActionKey = (order, action) => `${order.orderSn || order.id}-${action}`;
+
+const isOrderActionPending = (order, action) => {
+  return Boolean(pendingActions.value[buildOrderActionKey(order, action)]);
+};
+
+const setOrderActionPending = (order, action, pending) => {
+  const key = buildOrderActionKey(order, action);
+  if (pending) {
+    pendingActions.value[key] = true;
+    return;
+  }
+  delete pendingActions.value[key];
+};
 
 const startTimer = () => {
   if (timer) clearInterval(timer);
@@ -150,9 +188,41 @@ const toShop = (shopId) => {
   }
 };
 
-const toPay = (order) => {
-  // 跳转到收银台，使用 parentOrderSn 作为支付单号
-  router.push(`/pay/0?sn=${order.orderSn}`);
+const toPay = async (order) => {
+  if (isOrderActionPending(order, 'pay')) {
+    return;
+  }
+  setOrderActionPending(order, 'pay', true);
+  try {
+    // 跳转到收银台，使用 parentOrderSn 作为支付单号
+    await router.push(`/pay/0?sn=${order.orderSn}`);
+  } finally {
+    setOrderActionPending(order, 'pay', false);
+  }
+};
+
+const applyRefund = async (order) => {
+  if (isOrderActionPending(order, 'refund')) {
+    return;
+  }
+  setOrderActionPending(order, 'refund', true);
+  try {
+    await showConfirmDialog({
+      title: '申请退款',
+      message: `确认对订单 ${order.orderSn} 发起退款吗？`
+    });
+    await orderApi.refund(order.orderSn);
+    showSuccessToast('退款申请已提交');
+    loadOrders();
+  } catch (error) {
+    if (error === 'cancel') {
+      return;
+    }
+    console.error(error);
+    showToast(error?.message || '退款申请失败');
+  } finally {
+    setOrderActionPending(order, 'refund', false);
+  }
 };
 
 onMounted(() => {

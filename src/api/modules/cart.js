@@ -7,8 +7,8 @@ export const cartApi = {
   updateQuantity(data) {
     return request.post('/plaza-cart/cart/update', data);
   },
-  deleteCartItem(productId) {
-    return request.post('/plaza-cart/cart/delete', null, { params: { productId } });
+  deleteCartItem(cartItemId) {
+    return request.post('/plaza-cart/cart/delete', null, { params: { cartItemId } });
   },
   checkCartItem(data) {
     return request.post('/plaza-cart/cart/check', data);

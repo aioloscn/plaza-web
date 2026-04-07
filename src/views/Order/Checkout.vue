@@ -26,7 +26,7 @@
       <div class="shop-name">
         <van-icon name="shop-o" /> {{ group.shopName }}
       </div>
-      <div v-for="item in group.items" :key="item.productId" class="goods-item">
+      <div v-for="item in group.items" :key="item.id" class="goods-item">
         <van-image :src="item.image || item.productImage" width="60" height="60" radius="4" />
         <div class="goods-info">
           <div class="name">{{ item.productName || item.name }}</div>
@@ -75,7 +75,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/store/modules/cart';
 import { useUserStore } from '@/store/modules/user';
 import { addressApi, orderApi } from '@/api';
-import { showToast, showSuccessToast, showConfirmDialog } from 'vant';
+import { showToast, showSuccessToast, showConfirmDialog, showDialog } from 'vant';
 
 const route = useRoute();
 const router = useRouter();
@@ -124,7 +124,7 @@ const totalPrice = computed(() => {
 });
 
 const onChangeQuantity = (item, sId) => {
-  cartStore.setQuantity(item.productId, sId, item.quantity);
+  cartStore.setQuantity(item.id, item.quantity);
 };
 
 const onDelete = (item) => {
@@ -133,7 +133,7 @@ const onDelete = (item) => {
     message: '确定要移除该商品吗？',
   })
   .then(() => {
-    cartStore.deleteItem(item.productId);
+    cartStore.deleteItem(item.id);
   })
   .catch(() => {});
 };
@@ -186,6 +186,40 @@ const onSelectAddress = () => {
     router.push('/address/list?select=true');
 };
 
+const getConfirmPayload = () => ({
+    addressId: currentAddress.value.id,
+    shopId: shopIdParam ? Number(shopIdParam) : null,
+    shopNotes: shopNotes,
+    payType: 1
+});
+
+const showConfirmDiffTips = async (items = []) => {
+    const invalidItems = items.filter(item => item && item.valid === false);
+    if (!invalidItems.length) {
+        showToast('订单信息已变更，请重新确认');
+        return;
+    }
+    const tips = invalidItems.slice(0, 6).map((item, index) => {
+        const name = item.productName || `商品${item.productId || ''}`;
+        const reason = item.reasonMsg || '信息有变更';
+        if (item.reasonCode === 'PRICE_CHANGED') {
+            return `${index + 1}. ${name} 价格变动：¥${item.cartPrice} -> ¥${item.currentPrice}`;
+        }
+        if (item.reasonCode === 'STOCK_NOT_ENOUGH') {
+            return `${index + 1}. ${name} 库存不足：当前可买${item.availableStock}件`;
+        }
+        return `${index + 1}. ${name} ${reason}`;
+    });
+    if (invalidItems.length > 6) {
+        tips.push(`... 另有${invalidItems.length - 6}件商品也发生变化`);
+    }
+    await showDialog({
+        title: '订单信息已变更',
+        message: tips.join('\n'),
+        confirmButtonText: '我知道了'
+    });
+};
+
 const onSubmit = async () => {
     if (!userStore.userInfo?.userId) {
         showToast('请先登录再下单');
@@ -199,12 +233,18 @@ const onSubmit = async () => {
 
     loading.value = true;
     try {
-        const req = {
-            addressId: currentAddress.value.id,
-            shopId: shopIdParam ? Number(shopIdParam) : null,
-            shopNotes: shopNotes,
-            payType: 1
-        };
+        const req = getConfirmPayload();
+        const confirmRes = await orderApi.confirm(req);
+        const confirmData = (confirmRes && confirmRes.data) ? confirmRes.data : confirmRes;
+        if (!confirmData?.ready) {
+            await showConfirmDiffTips(confirmData?.items || []);
+            return;
+        }
+        if (!confirmData?.confirmToken) {
+            showToast('订单确认失败，请稍后重试');
+            return;
+        }
+        req.confirmToken = confirmData.confirmToken;
         const res = await orderApi.submit(req);
         // The backend now returns a string (parentOrderSn) or response object containing it
         const paySn = (res && res.data) ? res.data : res; 
@@ -218,7 +258,6 @@ const onSubmit = async () => {
         }, 1500);
     } catch (error) {
         console.error(error);
-        showToast(error.msg || '下单失败');
     } finally {
         loading.value = false;
     }

@@ -133,11 +133,9 @@ const redirectToLoginCenter = async () => {
 
 // 获取商品在购物车中的数量
 const getProductCartQuantity = (productId) => {
-  // 注意：购物车里的商品可能有 shopId 区分
-  // 这里简化查找，需确保 cartStore.items 结构
-  // cart.js 中存储的是 productId，而不是 id
-  const item = cartStore.items.find(item => String(item.productId) === String(productId) && String(item.shopId) === String(shopId))
-  return item ? item.quantity : 0
+  return cartStore.items
+    .filter(item => String(item.productId) === String(productId) && String(item.shopId) === String(shopId))
+    .reduce((total, item) => total + Number(item.quantity || 0), 0)
 }
 
 // Desktop 侦测（>=1200 视为 PC）
@@ -274,7 +272,13 @@ const addToCart = (product) => {
 
 // 减少购物车商品
 const minusFromCart = (product) => {
-  cartStore.minusQuantity(product.id, shopInfo.value.id || shopId)
+  const matchedItems = cartStore.items
+    .filter(item => String(item.productId) === String(product.id) && String(item.shopId) === String(shopId))
+    .sort((a, b) => Number(b.id) - Number(a.id))
+  const latestItem = matchedItems[0]
+  if (latestItem) {
+    cartStore.minusQuantity(latestItem.id)
+  }
 }
 
 // 点击下单

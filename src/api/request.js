@@ -57,7 +57,11 @@ request.interceptors.response.use(
       // 后端返回的可能是 msg，也可能是 message，或者都为空时给默认提示
       const errorMsg = msg || message || '请求失败'
       showToast(errorMsg)
-      return Promise.reject(new Error(errorMsg))
+      const err = new Error(errorMsg)
+      err.code = code
+      err.msg = errorMsg
+      err.raw = response.data
+      return Promise.reject(err)
     }
   },
   async (error) => {
