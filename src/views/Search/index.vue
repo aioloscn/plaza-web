@@ -198,6 +198,17 @@ const activeSort = ref('0') // 默认综合排序
 
 const searchHistory = computed(() => appStore.searchHistory)
 
+// 空闲态下清理搜索残留，避免 keepAlive 带来“幽灵标签”
+const clearSearchStateWhenIdle = () => {
+  const hasSearchCondition = searchValue.value.trim() || selectedCategoryId.value
+  if (!hasSearchCondition) {
+    tagStats.value = []
+    selectedTag.value = ''
+    searchResults.value = []
+    currentPage.value = 1
+    finished.value = false
+  }
+}
 
 
 // 处理标签点击
@@ -429,6 +440,7 @@ onMounted(async () => {
   }
   
   focusSearchInput()
+  clearSearchStateWhenIdle()
 })
 
 onUnmounted(() => {
@@ -440,6 +452,7 @@ onUnmounted(() => {
 // 页面激活时聚焦搜索框（处理从其他页面返回的情况）
 onActivated(() => {
   focusSearchInput()
+  clearSearchStateWhenIdle()
 })
 
 // 处理搜索提交（用户按回车或点击搜索按钮）
@@ -471,6 +484,7 @@ const handleClear = () => {
   searchValue.value = ''
   selectedCategoryId.value = null
   selectedTag.value = ''
+  tagStats.value = []
   searchResults.value = []
   finished.value = false
   currentPage.value = 1
@@ -537,10 +551,13 @@ const onLoad = async () => {
     }
     
     const response = await shopApi.searchShops(searchParams)
-     
-     if (response.data && response.data.records) {
+
+    // request 拦截器默认已解包为 data，兜底兼容未解包场景
+    const pageData = response?.records ? response : response?.data
+
+    if (pageData && Array.isArray(pageData.records)) {
       // 格式化数据以匹配前端显示需求
-      const formattedResults = response.data.records.map(shop => ({
+      const formattedResults = pageData.records.map(shop => ({
         ...shop,
         id: shop.id,
         name: shop.name || shop.shopName || shop.title || '未知店铺',
@@ -548,20 +565,22 @@ const onLoad = async () => {
         perCapitaPrice: shop.perCapitaPrice || shop.avgPrice || shop.price || 0,
         tags: shop.tags || shop.category || shop.type || '',
         iconUrl: shop.iconUrl || shop.image || shop.avatar || '/images/shop-default.svg',
-        distanceText: shop.distance || shop.distanceText || '',
+        distanceText: shop.distanceText || shop.distance || '',
         // 保持向后兼容
         description: shop.description || shop.desc || '暂无描述',
         image: shop.image || shop.avatar || shop.logo || '/images/shop-default.svg',
         price: shop.price || shop.avgPrice || 0,
-        distance: shop.distance !== undefined && shop.distance !== null ? (shop.distance / 1000).toFixed(1) : '0.0'
+        distance: typeof shop.distance === 'number'
+          ? (shop.distance / 1000).toFixed(1)
+          : (shop.distance || '0.0')
       }))
       
       if (currentPage.value === 1) {
         searchResults.value = formattedResults
         
         // 使用后端返回的标签聚合数据（从第一条记录中获取）
-        if (response.data.records && response.data.records.length > 0) {
-          const firstRecord = response.data.records[0]
+        if (pageData.records && pageData.records.length > 0) {
+          const firstRecord = pageData.records[0]
           console.log('第一条记录:', firstRecord)
           console.log('tagAggregations:', firstRecord.tagAggregations)
           
@@ -580,7 +599,7 @@ const onLoad = async () => {
       }
       
       // 判断是否还有更多数据
-      const { current, size, total } = response.data
+      const { current, size, total } = pageData
       if (formattedResults.length < pageSize || current * size >= total) {
         finished.value = true
       } else {

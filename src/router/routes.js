@@ -29,7 +29,8 @@ const routes = [
     name: 'Search',
     component: () => import('@/views/Search/index.vue'),
     meta: {
-      title: '搜索'
+      title: '搜索',
+      keepAlive: true
     }
   },
   {

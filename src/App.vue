@@ -1,6 +1,11 @@
 <template>
   <div id="app">
-    <router-view />
+    <router-view v-slot="{ Component, route: currentRoute }">
+      <keep-alive>
+        <component :is="Component" v-if="currentRoute.meta.keepAlive" :key="currentRoute.name || currentRoute.path" />
+      </keep-alive>
+      <component :is="Component" v-if="!currentRoute.meta.keepAlive" :key="currentRoute.fullPath" />
+    </router-view>
   </div>
 </template>
 
